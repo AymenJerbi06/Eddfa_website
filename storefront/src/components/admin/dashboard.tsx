@@ -7,8 +7,8 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { ArrowUpRight, Boxes, Check, ChevronRight, CircleAlert, Eye, LayoutDashboard, LoaderCircle, LogOut, Package, Pencil, Plus, RefreshCw, Save, Search, ShoppingBag, Tag, Trash2, Warehouse, X } from "lucide-react";
 import { blankProduct, type AdminData, type AdminOrder, type AdminProduct, type AdminPromotion } from "@/lib/admin-types";
-import { adminApi, ClientAdminError } from "./api";
-import { DeleteDialog, IconButton, ProductEditor, PromotionEditor, money, photoUrl } from "./editors";
+import { useAdminApi, useAdminPhoto, ClientAdminError } from "./api";
+import { DeleteDialog, IconButton, ProductEditor, PromotionEditor, money } from "./editors";
 
 const sections = [
   { key: "apercu", title: "Vue d'ensemble", icon: LayoutDashboard },
@@ -22,7 +22,7 @@ function Badge({ status }: { status: string }) {
   const labels: Record<string, string> = { published: "Publié", draft: "Brouillon", active: "Actif", inactive: "Inactif", pending: "En attente", completed: "Terminée", canceled: "Annulée", not_paid: "Non payée", captured: "Encaissée", not_fulfilled: "Non expédiée", fulfilled: "Expédiée", delivered: "Livrée" };
   return <span className={`admin-badge ${["published", "active", "completed", "captured", "delivered"].includes(status) ? "positive" : ""}`}>{labels[status] ?? status}</span>;
 }
-function ProductImage({ product }: { product: AdminProduct }) { return product.images[0] ? <img src={photoUrl(product.images[0])} alt="" className="admin-product-thumb" /> : <span className="admin-product-thumb empty"><Package size={22} /></span>; }
+function ProductImage({ product }: { product: AdminProduct }) { const photoUrl = useAdminPhoto(); return product.images[0] ? <img src={photoUrl(product.images[0])} alt="" className="admin-product-thumb" /> : <span className="admin-product-thumb empty"><Package size={22} /></span>; }
 function ProductRows({ products, onEdit, onDelete }: { products: AdminProduct[]; onEdit: (product: AdminProduct) => void; onDelete: (product: AdminProduct) => void }) {
   return <div className="admin-product-list"><div className="admin-list-labels"><span>Produit</span><span>Gamme / versions</span><span>Prix</span><span>Statut</span><span /></div>{products.map(product => {
     const prices = product.variants.map(variant => variant.price).filter((price): price is number => price !== null);
@@ -30,6 +30,7 @@ function ProductRows({ products, onEdit, onDelete }: { products: AdminProduct[];
   })}</div>;
 }
 function StockRow({ product, variant, locationId, saved }: { product: AdminProduct; variant: AdminProduct["variants"][number]; locationId: string; saved: () => Promise<void> }) {
+  const adminApi = useAdminApi();
   const [quantity, setQuantity] = useState(String(variant.stocked ?? 0));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -47,7 +48,8 @@ function OrderDetails({ order, onClose }: { order: AdminOrder; onClose: () => vo
   return <Dialog.Root open onOpenChange={open => { if (!open) onClose(); }}><Dialog.Portal><Dialog.Overlay className="admin-overlay" /><Dialog.Content className="admin-drawer eddfa-admin" aria-describedby={undefined}><div className="admin-drawer-header"><Dialog.Title>Commande #{order.display_id}</Dialog.Title><Dialog.Close asChild><button className="admin-icon" title="Fermer" aria-label="Fermer"><X size={21} /></button></Dialog.Close></div><div className="admin-editor-body"><Badge status={order.status} /><h3 className="admin-subheading">Client</h3><p>{address?.first_name} {address?.last_name}<br />{address?.phone}<br />{order.email}</p><h3>Livraison</h3><p>{address?.address_1}<br />{address?.city}</p><h3>Produits</h3>{order.items?.map(item => <div className="admin-order-item" key={item.id}><span>{item.quantity} × {item.title}</span><strong>{money(item.unit_price * item.quantity)}</strong></div>)}<div className="admin-order-item"><strong>Total</strong><strong>{money(order.total)}</strong></div></div></Dialog.Content></Dialog.Portal></Dialog.Root>;
 }
 
-export function AdminDashboard({ email }: { email: string }) {
+export function AdminDashboard({ email, demo = false }: { email: string; demo?: boolean }) {
+  const adminApi = useAdminApi();
   const router = useRouter();
   const params = useSearchParams();
   const view = sections.some(section => section.key === params.get("vue")) ? params.get("vue")! : "apercu";
@@ -70,11 +72,11 @@ export function AdminDashboard({ email }: { email: string }) {
     try { setData(await adminApi<AdminData>("data")); }
     catch (error) { if (error instanceof ClientAdminError && [401, 403].includes(error.status)) router.replace("/admin/login"); else setError(error instanceof Error ? error.message : "Chargement impossible."); throw error; }
     finally { setLoading(false); setRefreshing(false); }
-  }, [router]);
+  }, [router, adminApi]);
   useEffect(() => { void load().catch(() => {}); }, [load]);
   useEffect(() => { setQuery(""); setFilter("all"); }, [view]);
   useEffect(() => { if (!notice) return; const timer = setTimeout(() => setNotice(""), 4000); return () => clearTimeout(timer); }, [notice]);
-  async function saved() { await load(); setNotice("Modifications enregistrées."); }
+  async function saved() { await load(); setNotice(demo ? "Modifications appliquées à la démonstration." : "Modifications enregistrées."); }
   async function signOut() {
     setLogoutBusy(true);
     try { await adminApi("session", undefined, "DELETE"); router.replace("/admin/login"); router.refresh(); }
@@ -99,6 +101,7 @@ export function AdminDashboard({ email }: { email: string }) {
   return <div className="admin-workspace">
     <aside className="admin-sidebar"><Link href="/admin" className="admin-brand" aria-label="EDDFA administration"><Image src="/eddfa/logo.optimized.webp" alt="EDDFA" width={166} height={43} priority /><small>ADMINISTRATION</small></Link><nav aria-label="Administration EDDFA">{sections.map(section => { const Icon = section.icon; return <Link href={section.key === "apercu" ? "/admin" : `/admin?vue=${section.key}`} key={section.key} aria-current={view === section.key ? "page" : undefined}><Icon size={19} /><span>{section.title}</span>{data && ["produits", "packs"].includes(section.key) && <small>{products.filter(product => (section.key === "packs") === (product.category === "bundle")).length}</small>}</Link>; })}</nav><div className="admin-sidebar-foot"><span>SFAX · TUNISIE</span><span>TND</span></div></aside>
     <div className="admin-main"><header className="admin-topbar"><span>EDDFA <ChevronRight size={14} />{current.title}</span><div><Link className="admin-store-link" href="/fr" target="_blank" rel="noopener noreferrer">Voir la boutique<ArrowUpRight size={17} /></Link><button className="admin-icon" title="Se déconnecter" aria-label="Se déconnecter" disabled={logoutBusy} onClick={() => void signOut()}>{logoutBusy ? <LoaderCircle className="admin-spin" size={18} /> : <LogOut size={18} />}</button></div></header>
+      {demo && <div className="admin-demo-notice" role="note"><strong>Démonstration</strong><span>Données temporaires · aucune modification de la boutique publique.</span></div>}
       <main className="admin-content"><div className="admin-page-heading"><div><span className="admin-eyebrow">VOTRE BOUTIQUE</span><h1>{current.title}</h1></div><div className="admin-heading-actions"><IconButton title="Actualiser" disabled={refreshing} onClick={() => void load().catch(() => {})}><RefreshCw size={18} className={refreshing ? "admin-spin" : ""} /></IconButton>{["produits", "packs"].includes(view) && <button className="admin-button primary" disabled={!data} onClick={addProduct}><Plus size={18} />{view === "packs" ? "Ajouter un pack" : "Ajouter un produit"}</button>}{view === "promos" && <button className="admin-button primary" disabled={!data} onClick={addPromotion}><Plus size={18} />Ajouter un code</button>}</div></div>
         {error && <div className="admin-error admin-page-error" role="alert"><CircleAlert size={18} /><span>{error}</span><button className="admin-button" onClick={() => void load().catch(() => {})}>Réessayer</button></div>}
         {loading ? <div className="admin-loading" role="status"><LoaderCircle size={24} className="admin-spin" />Chargement de la boutique…</div> : data && <>

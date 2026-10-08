@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { AdminProduct, AdminPromotion, AdminVariant } from "./admin-types";
 import { sameOrigin } from "./admin-validation";
 import { isClientPreview } from "./deployment-policy";
+import { currentDemoAdmin } from "./demo-admin-server";
 
 export const ADMIN_COOKIE = "eddfa_admin";
 export class AdminError extends Error {
@@ -45,6 +46,7 @@ export async function adminToken() {
   return token;
 }
 export async function currentAdmin() {
+  if (isClientPreview()) return currentDemoAdmin();
   try {
     const token = await adminToken();
     const result = await commerce<{ user: { email: string } }>("/admin/users/me", token);

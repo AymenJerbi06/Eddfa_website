@@ -70,7 +70,7 @@ export const products: CatalogProduct[] = [
     id: "eclat-service", handle: "eclat-service", title: { fr: "ECLAT SERVICE", ar: "ECLAT SERVICE" }, category: "eclat",
     description: { fr: "Un sèche-serviettes électrique sur pied, sans fixation murale. Il se pose au sol et peut être déplacé d’un espace à l’autre.", ar: "مجفف مناشف كهربائي قائم بذاته دون تثبيت جداري. يُوضع على الأرض ويمكن نقله من مساحة إلى أخرى." },
     installation: { fr: "À poser sur une surface stable, dans un emplacement compatible avec la sécurité électrique. Consultez les consignes d’utilisation avant déplacement.", ar: "يُوضع على سطح ثابت في موقع مناسب للسلامة الكهربائية. راجع تعليمات الاستخدام قبل نقله." },
-    image: asset("eclat-service"), gallery: [asset("eclat-service")],
+    image: asset("gallery-003"), gallery: [asset("gallery-003"), asset("eclat-service")],
     variants: [{ id: "eclat-service-250", dimensions: [900, 450, 25], resistance: 250, thermalPower: 420 }, { id: "eclat-service-400", dimensions: [1100, 450, 25], resistance: 400, thermalPower: 560 }], price: null, purchasable: false,
   },
 ];
@@ -95,7 +95,7 @@ export const company = {
   email: "Commercial@eddfa.tn",
   address: "Route de Gabès, boulevard de l'environnement, rue Maarouf Essrarfi, Sfax 3000, Tunisie",
   mapEmbedUrl: "https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d13116.65788972195!2d10.7389973!3d34.7262484!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x13002d34b7318d03%3A0x809d528a43131c33!2sEDDFA!5e0!3m2!1sfr!2stn!4v1664369613082!5m2!1sfr!2stn",
-  footerCreditApproved: false,
+  footerCreditApproved: true,
 };
 
 export const messages = {

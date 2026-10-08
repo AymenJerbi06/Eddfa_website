@@ -48,6 +48,7 @@
 .admin-sidebar nav a small { margin-left: auto; font-size: 10px; font-weight: 450; }
 .admin-sidebar-foot { margin-top: auto; padding: 18px 12px 0; border-top: 1px solid var(--admin-border); display: flex; justify-content: space-between; font-size: 9px; color: var(--admin-muted); }
 .admin-main { display: flex; flex-direction: column; min-width: 0; }
+.admin-demo-notice { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; padding: 12px 24px; color: #70531d; background: #f5f0e3; border-bottom: 1px solid #e4dac1; font-size: 11px; }
 .admin-topbar { min-height: 70px; padding: 14px 36px; border-bottom: 1px solid var(--admin-border); display: flex; align-items: center; justify-content: space-between; gap: 16px; background: white; }
 .admin-topbar > span { display: flex; align-items: center; gap: 12px; font-size: 11px; color: var(--admin-muted); }
 .admin-topbar > div { display: flex; align-items: center; gap: 22px; }

@@ -4,10 +4,9 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { ArrowLeft, ArrowRight, Check, ImagePlus, LoaderCircle, Plus, Save, Trash2, X } from "lucide-react";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { blankVariant, type AdminProduct, type AdminPromotion, type AdminVariant } from "@/lib/admin-types";
-import { adminApi } from "./api";
+import { useAdminApi, useAdminPhoto } from "./api";
 
 export const money = (value: number) => new Intl.NumberFormat("fr-TN", { style: "currency", currency: "TND", minimumFractionDigits: 3 }).format(value);
-export const photoUrl = (filename: string) => `/api/catalog-image/${encodeURIComponent(filename)}`;
 export function IconButton({ title, children, onClick, disabled = false, className = "" }: { title: string; children: ReactNode; onClick: () => void; disabled?: boolean; className?: string }) { return <button type="button" title={title} aria-label={title} className={`admin-icon ${className}`} onClick={onClick} disabled={disabled}>{children}</button>; }
 function Drawer({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
   return <Dialog.Root open onOpenChange={open => { if (!open) onClose(); }}><Dialog.Portal><Dialog.Overlay className="admin-overlay" /><Dialog.Content className="admin-drawer eddfa-admin" aria-describedby={undefined}><div className="admin-drawer-header"><Dialog.Title>{title}</Dialog.Title><Dialog.Close asChild><button type="button" title="Fermer" aria-label="Fermer" className="admin-icon"><X size={21} /></button></Dialog.Close></div>{children}</Dialog.Content></Dialog.Portal></Dialog.Root>;
@@ -21,6 +20,8 @@ function productPayload(product: AdminProduct) {
   return { ...rest, variants: product.variants.map(({ inventoryId: _inventory, stocked: _stock, reserved: _reserved, ...variant }) => { void _inventory; void _stock; void _reserved; return variant; }) };
 }
 export function ProductEditor({ initial, products, onClose, onSaved }: { initial: AdminProduct; products: AdminProduct[]; onClose: () => void; onSaved: () => Promise<void> }) {
+  const adminApi = useAdminApi();
+  const photoUrl = useAdminPhoto();
   const [product, setProduct] = useState<AdminProduct>(() => structuredClone(initial));
   const [tab, setTab] = useState("produit");
   const [language, setLanguage] = useState("fr");
@@ -87,6 +88,7 @@ export function ProductEditor({ initial, products, onClose, onSaved }: { initial
   </Drawer>;
 }
 export function PromotionEditor({ initial, onClose, onSaved }: { initial: AdminPromotion; onClose: () => void; onSaved: () => Promise<void> }) {
+  const adminApi = useAdminApi();
   const [promotion, setPromotion] = useState(initial);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
