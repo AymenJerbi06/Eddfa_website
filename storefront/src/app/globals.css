@@ -311,9 +311,10 @@ address { font-style: normal; }
   .contact-grid, .product-detail-grid { gap: 40px; }
 }
 @media (max-width: 921px) {
+  :root { --mobile-header-height: 84px; }
   .desktop-nav { display: none; }
   .site-header { position: relative; height: auto; background: #222; }
-  .header-inner { height: 84px; }
+  .header-inner { height: var(--mobile-header-height); }
   .mobile-menu-button { display: inline-flex; border: 1px solid #ddd; border-radius: 2px; }
   .mobile-nav { display: block; background: var(--dark); padding-block: 6px; }
   .mobile-nav .nav-link-row { min-height: 44px; justify-content: space-between; }
@@ -323,7 +324,8 @@ address { font-style: normal; }
   .mobile-nav .nav-dropdown a { padding: 10px 36px; font-size: 14px; }
   .mobile-nav .language-link { min-height: 44px; padding: 10px 24px; font-size: 15px; }
   .mobile-nav [aria-current="page"] { color: var(--gold); }
-  .hero { height: calc(100svh - 84px); min-height: 500px; }
+  /* Account for browser chrome, while allowing short landscape screens to grow. */
+  .hero { height: auto; min-height: calc(100svh - var(--mobile-header-height) - 12px); min-height: calc(100dvh - var(--mobile-header-height) - 12px); }
   .hero-content { padding-block: 90px 65px; }
   .hero h1 { font-size: 48px; max-width: 670px; }
   .about-grid { gap: 28px; }
@@ -354,11 +356,10 @@ address { font-style: normal; }
   .brand > svg { width: 30px; }
   .brand-logo { width: 144px; height: 37px; }
   .section { padding-block: 55px; }
-  .hero { min-height: 380px; height: auto; }
-  .hero-content { padding-block: 72px 60px; }
-  .hero h1 { font-size: 28px; max-width: 440px; margin-bottom: 6px; }
+  .hero-content { padding-block: 48px 84px; }
+  .hero h1 { font-size: 32px; max-width: 440px; margin-bottom: 12px; }
   .hero-content p { font-size: 15px; max-width: 400px; margin-bottom: 28px; }
-  .hero-next { display: none; }
+  .hero-next { min-height: 44px; bottom: 8px; inset-inline: 76px; text-align: center; }
   .hero-poster { object-position: 15% center; }
   .about-grid, .commitment-grid, .product-detail-grid, .contact-grid { grid-template-columns: 1fr; gap: 32px; }
   .about-photo { height: auto; aspect-ratio: 1.08; border-radius: 16px; }
@@ -393,10 +394,13 @@ address { font-style: normal; }
   .footer-grid p { max-width: 430px; margin-bottom: 0; font-size: 14px; }
   .footer-grid li, .footer-grid address { font-size: 14px; }
   .footer-bottom { margin-top: 40px; padding-block: 24px 70px; font-size: 12px; }
-  .contact-rail { top: auto; bottom: 18px; inset-inline-end: 18px; transform: none; }
+  .contact-rail { top: auto; bottom: max(18px, env(safe-area-inset-bottom)); inset-inline-end: max(18px, env(safe-area-inset-right)); transform: none; }
   .contact-rail .rail-button { display: none; }
   .contact-rail .rail-button:first-child { display: flex; border-radius: 50%; background: #414845; box-shadow: 0 4px 12px rgb(0 0 0 / 14%); }
-  .back-to-top { bottom: 80px; inset-inline-end: 22px; }
+  .back-to-top { bottom: calc(80px + env(safe-area-inset-bottom)); inset-inline-end: max(22px, env(safe-area-inset-right)); min-width: 44px; min-height: 44px; }
+  .carousel-pause { min-width: 44px; min-height: 44px; }
+  .carousel-dots button { width: 44px; height: 44px; }
+  .universe-wrapper .carousel-dots { padding-inline-end: 52px; }
   .page-section { padding-top: 120px; }
   .page-heading { margin-bottom: 32px; }
   .page-heading h1 { font-size: 36px; }
@@ -406,9 +410,9 @@ address { font-style: normal; }
   .search-field { width: 100%; }
   .search-field input { font-size: 16px; }
   .catalog-grid { gap: 30px 15px; }
-  .catalog-item-caption { align-items: start; gap: 0; padding-top: 14px; }
+  .catalog-item-caption { align-items: start; gap: 8px; padding-top: 14px; }
   .catalog-item-caption h2 { font-size: 17px; }
-  .catalog-item-caption > a { min-width: 28px; min-height: 35px; }
+  .catalog-item-caption > a { min-width: 44px; min-height: 44px; }
   .catalog-item-caption > a svg { width: 18px; }
   .catalog-photo { aspect-ratio: .85; }
   .gallery-grid { grid-template-columns: 1fr; gap: 20px; }
@@ -423,7 +427,7 @@ address { font-style: normal; }
   .certificate-section { grid-template-columns: 1fr; gap: 24px; }
   .certificate-badge { width: 200px; height: 72px; }
   .form-row { grid-template-columns: 1fr; gap: 16px; }
-  .quote-dialog { padding: 28px 22px; }
+  .quote-dialog { top: max(16px, env(safe-area-inset-top)); transform: translateX(-50%); max-height: calc(100svh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); max-height: calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); padding: 28px 22px; overscroll-behavior: contain; }
   .quote-dialog h2 { font-size: 25px; }
   .gallery-dialog { inset: 55px 15px 25px; }
   .gallery-close { top: -43px; inset-inline-end: 0; }
@@ -435,7 +439,7 @@ address { font-style: normal; }
   .value-description { padding: 5px 20px 25px; }
 }
 @media (max-width: 380px) {
-  .hero h1 { font-size: 26px; }
+  .hero h1 { font-size: 28px; }
   .catalog-grid { grid-template-columns: 1fr; }
   .catalog-photo { aspect-ratio: 1; }
   .catalog-item-caption h2 { font-size: 22px; }
@@ -443,6 +447,17 @@ address { font-style: normal; }
   .universe-slide { flex-basis: 90%; }
   .footer-grid { grid-template-columns: 1fr; }
   .footer-grid > div { grid-column: auto !important; }
+}
+@media (max-width: 921px) and (max-height: 500px) and (orientation: landscape) {
+  :root { --mobile-header-height: 68px; }
+  .hero-content { padding-block: 20px 60px; }
+  .hero h1 { font-size: 28px; max-width: none; margin-bottom: 8px; }
+  .hero-brand { display: inline; margin-inline-end: 12px; }
+  .hero-content p { font-size: 14px; max-width: none; margin-bottom: 16px; }
+  .hero-content .pill-button { min-height: 44px; padding: 10px 24px; }
+  .contact-rail { top: auto; bottom: max(18px, env(safe-area-inset-bottom)); inset-inline-end: max(18px, env(safe-area-inset-right)); transform: none; }
+  .contact-rail .rail-button { display: none; }
+  .contact-rail .rail-button:first-child { display: flex; border-radius: 50%; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
