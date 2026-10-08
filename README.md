@@ -1,5 +1,8 @@
 # EDDFA Client Preview
 
+Live review demo: [French](https://eddfa-website.vercel.app/fr) |
+[Arabic](https://eddfa-website.vercel.app/ar).
+
 French/Arabic Next.js storefront for EDDFA, using the supplied EDDFA branding,
 product specifications and optimized photographs. This repository contains only
 the presentation storefront in `storefront/`. The local database, backend,

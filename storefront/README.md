@@ -9,7 +9,7 @@ npm install
 npm run dev -- --port 3000
 ```
 
-Open http://127.0.0.1:3000/fr or http://127.0.0.1:3000/ar. For this integrated prototype, first start the database and API as described in `../backend/README.md`. The existing `.env.local` enables `MEDUSA_BACKEND_URL=http://127.0.0.1:9000` and `EDDFA_LOCAL_ADMIN=true`. The panel's local-origin guard expects port 3000. Node 24 is used for this workspace; dependency versions are locked.
+Open http://127.0.0.1:3000/fr or http://127.0.0.1:3000/ar. A fresh clone works without a backend. To use the integrated panel in the original workspace, first start the database and API as described in `../backend/README.md` (the backend is intentionally not in this presentation repository). That workspace's `.env.local` enables `MEDUSA_BACKEND_URL=http://127.0.0.1:9000` and `EDDFA_LOCAL_ADMIN=true`. The panel's local-origin guard expects port 3000. Node 24 is used for this workspace; dependency versions are locked.
 
 ```powershell
 npm run typecheck
@@ -32,7 +32,7 @@ npm run build
 
 ## EDDFA Assets and Launch Restrictions
 
-Visible media now comes from the user's Images+Products folder: EDDFA's transparent logo, favicon, team photo, model/collection images and nine readable gallery photos. Originals are untouched. Optimized copies are in public/eddfa. The unused reference media is archived outside public/ in archive/reference-assets. Source details and asset limitations are in ASSET-PROVENANCE.md. All pages remain noindex/nofollow; this discourages indexing but is not access control. The prototype has not been deployed.
+Visible media now comes from the user's Images+Products folder: EDDFA's transparent logo, favicon, team photo, model/collection images and nine readable gallery photos. Originals are untouched. Optimized copies are in public/eddfa. The unused reference media is archived outside public/ in archive/reference-assets and excluded from this repository. Source details and asset limitations are in ASSET-PROVENANCE.md. All pages remain noindex/nofollow; this discourages indexing but is not access control. The database-free review demo is deployed at [eddfa-website.vercel.app](https://eddfa-website.vercel.app/fr); the integrated administration remains local-only.
 
 The reference layout, CSS palette and typography were re-inspected and refined after EDDFA content replacement. The model carousel replaces the reference client-logo band without implying customer affiliations. French copy follows the supplied business notes, with draft Arabic localization to approve before launch. The supplied Veritas PDF is labelled as a historical 2023 document for EDEN 100/50, with stated validity through June 25, 2026; it does not establish current certification of the whole range.
 

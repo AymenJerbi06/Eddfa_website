@@ -1,5 +1,12 @@
 # Standalone Client Presentation
 
+Deployed October 8, 2026:
+[French preview](https://eddfa-website.vercel.app/fr) |
+[Arabic preview](https://eddfa-website.vercel.app/ar).
+Project: `aymenjerbi06s-projects/eddfa-website`, Node 24, connected to GitHub's
+`main` branch. Future pushes to that branch rebuild this review demo. No live
+EDDFA domain, backend, database or paid plan was activated.
+
 ## GitHub and Vercel
 
 - Repository: `AymenJerbi06/Eddfa_website`.
@@ -48,3 +55,16 @@ Open `http://127.0.0.1:3001/fr` and `/ar`. This environment override takes prior
 over `.env.local`, so local database credentials do not need to be removed.
 After stopping the presentation server, remove the session override with
 `Remove-Item Env:EDDFA_DEMO_MODE` to use the local integrated panel again.
+
+## Verified
+
+- All 16 unit tests, TypeScript checking and local/Vercel production builds passed.
+- Production-dependency audit reported zero known vulnerabilities.
+- All 22 French/Arabic public routes returned 200 over the hosted URL, with
+  `noindex, nofollow`. Both admin pages and the backend image proxy returned 404;
+  admin session GET/POST/DELETE returned 503 without authentication or backend access.
+- Laptop/home media, catalog filtering, animated header arrival and Arabic mobile
+  product rendering were checked in the browser. No horizontal overflow or broken
+  visible images was observed in these sampled views.
+- The local admin login on port 3000 still renders; its database was not altered
+  by these preview checks. This is a presentation smoke test, not a commerce audit.
