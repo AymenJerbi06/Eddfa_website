@@ -302,7 +302,7 @@ export const messages = {
     chapters: ["Activité", "Historique", "Produits", "Informations", "Locaux"], chaptersLabel: "Sur cette page", premisesEyebrow: "LOCAUX ET LOCALISATION", premisesTitle: "Nos locaux à Sfax.",
     assurances: ["Fabriqué à Sfax", "100 % aluminium", "Conseil avant votre achat"],
     toScale: "À l’échelle", viewLabel: "Affichage des articles",
-    finish: "Finition", roomAlt: "en situation dans une salle de bain", teamPlate: "L’équipe EDDFA", teamPlace: "Sfax, Tunisie", detailAlt: "Détail d’un sèche-serviettes EDEN noir : tubes en aluminium, robinet chromé et serviette",
+    finish: "Finition", roomAlt: "en situation dans une salle de bain", railCall: "Appeler", railMail: "Écrire", otherPhoto: "Autre photo", teamPlate: "L’équipe EDDFA", teamPlace: "Sfax, Tunisie", detailAlt: "Détail d’un sèche-serviettes EDEN noir : tubes en aluminium, robinet chromé et serviette",
     drawingNote: "Schéma indicatif, cotes en millimètres.", photo: "Photo", of: "sur",
   },
   ar: {
@@ -385,7 +385,7 @@ export const messages = {
     chapters: ["النشاط", "المسيرة", "المنتجات", "معلومات عامة", "المقر"], chaptersLabel: "في هذه الصفحة", premisesEyebrow: "المقر والموقع", premisesTitle: "مقرّنا في صفاقس.",
     assurances: ["صُنع في صفاقس", "ألمنيوم بالكامل", "نصيحة قبل الشراء"],
     toScale: "بالمقياس نفسه", viewLabel: "طريقة عرض المنتجات",
-    finish: "اللون", roomAlt: "داخل حمّام", teamPlate: "فريق EDDFA", teamPlace: "صفاقس، تونس", detailAlt: "تفصيل من مجفف المناشف EDEN الأسود: أنابيب من الألمنيوم وصمام مطلي بالكروم ومنشفة",
+    finish: "اللون", roomAlt: "داخل حمّام", railCall: "اتصال", railMail: "مراسلة", otherPhoto: "صورة أخرى", teamPlate: "فريق EDDFA", teamPlace: "صفاقس، تونس", detailAlt: "تفصيل من مجفف المناشف EDEN الأسود: أنابيب من الألمنيوم وصمام مطلي بالكروم ومنشفة",
     drawingNote: "رسم توضيحي، المقاسات بالمليمتر.", photo: "صورة", of: "من",
   },
 };

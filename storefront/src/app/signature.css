@@ -151,6 +151,10 @@
 .catalog-photo { aspect-ratio: 3 / 4; }
 .catalog-photo img { object-fit: cover; }
 .catalog-photo .card-second { opacity: 0; transition: opacity .6s var(--ease); }
+.catalog-item { position: relative; }
+.card-flip { position: absolute; z-index: 2; top: 10px; inset-inline-end: 10px; display: none; align-items: center; justify-content: center; gap: 6px; min-width: 46px; min-height: 44px; padding: 0 13px; border: 1px solid rgb(255 255 255 / 16%); border-radius: 40px; background: rgb(20 16 4 / 56%); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.card-flip span { width: 7px; height: 7px; border-radius: 50%; background: rgb(255 255 255 / 55%); transition: background .3s; }
+.card-flip[aria-pressed="false"] span:first-child, .card-flip[aria-pressed="true"] span:last-child { background: var(--gold); }
 
 /* Every product photo is a room photo now: they fill their frames, and the article stage is a portrait. */
 .project-tile img, .sizing-thumb img, .detail-photo img { object-fit: cover; }
@@ -183,6 +187,8 @@
 }
 @media (hover: none) {
   .catalog-photo .card-second { display: none; }
+  .catalog-photo.show-second .card-second { display: block; opacity: 1; }
+  .card-flip { display: inline-flex; }
   .catalog-quick { opacity: 1; transform: none; }
 }
 @media (max-width: 1100px) {
@@ -192,12 +198,25 @@
   .showcase-tab[aria-selected="true"] { padding-inline-start: 32px; }
   .showcase-progress { inset-inline-start: 22px; }
 }
-@media (max-width: 921px) {
+/* Tablets keep the desktop arrangements: three articles across, the range list beside its stage. */
+@media (min-width: 641px) and (max-width: 1100px) {
+  .catalog-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+}
+@media (min-width: 701px) and (max-width: 921px) {
+  .showcase { grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 28px; }
+  .showcase-tab { min-height: 84px; padding: 12px 18px; }
+  .showcase-tab[aria-selected="true"] { padding-inline-start: 28px; }
+  .showcase-progress { inset-inline-start: 18px; }
+  .showcase-stage { min-height: 500px; }
+}
+@media (max-width: 700px) {
   .showcase-section { padding-block: 64px 72px; }
   .showcase { grid-template-columns: minmax(0, 1fr); gap: 18px; }
   .showcase-list { display: flex; gap: 8px; padding-bottom: 4px; overflow-x: auto; overscroll-behavior-x: contain; border: 0; scrollbar-width: none; }
   .showcase-list::-webkit-scrollbar { display: none; }
-  .showcase-marker, .showcase-kind, .showcase-progress { display: none; }
+  .showcase-marker, .showcase-kind { display: none; }
+  .showcase-progress { inset-inline: 18px; bottom: 6px; height: 2px; border-radius: 2px; overflow: hidden; }
+  .showcase-progress::after { background: var(--gold); }
   .showcase-tab, .showcase-tab[aria-selected="true"] { flex: 0 0 auto; min-height: 44px; padding: 8px 20px; border: 1px solid var(--line); border-radius: 40px; background: var(--paper); }
   .showcase-tab + .showcase-tab { border-top: 1px solid var(--line); }
   .showcase-tab[aria-selected="true"] { border-color: var(--dark); background: var(--dark); }
@@ -208,13 +227,13 @@
 @media (max-width: 640px) {
   .about-figure { padding: 9px; border-radius: 24px; }
   .about-photo { border-radius: 16px; }
-  .about-plate { top: 17px; right: 17px; padding: 7px 11px; border-radius: 10px; }
-  .about-plate span { display: none; }
-  .about-plate strong { font-size: 12px; }
+  .about-plate { top: 16px; right: 16px; padding: 6px 10px; border-radius: 10px; }
+  .about-plate span { font-size: 8.5px; }
+  .about-plate strong { font-size: 11.5px; }
   .gallery-grid.mosaic { --cols: 2; --gap: 12px; }
   .mosaic .project-tile { border-radius: 14px; }
   .mosaic .project-tile:not(.lead, .wide) .project-caption { padding: 30px 12px 12px; font-size: 13px; }
-  .mosaic .project-tile:not(.lead, .wide) .project-caption svg { display: none; }
+  .mosaic .project-tile:not(.lead, .wide) .project-caption svg { flex: none; width: 15px; height: 15px; }
   .mosaic-count { margin-inline-start: 0; }
   .mosaic-views label { padding-inline: 6px; font-size: 13px; }
   .facts-marquee li { padding: 15px 20px; font-size: 14px; }
@@ -232,6 +251,33 @@
   .filmstrip .carousel-track { padding-block: 6px 24px; }
 }
 
+/* Phones and tablets: the three contact buttons stay, as one labelled dock at the bottom, clear of the content's
+   edges; back-to-top sits above it. */
+.rail-label { display: none; }
+@media (max-width: 921px) {
+  .contact-rail { top: auto; bottom: max(12px, env(safe-area-inset-bottom)); inset-inline: auto; left: 50%; transform: translateX(-50%); flex-direction: row; gap: 2px; padding: 6px; border: 1px solid rgb(255 255 255 / 12%); border-radius: 40px; background: var(--dark); box-shadow: 0 10px 30px rgb(0 0 0 / 24%); transition: opacity .3s; }
+  .contact-rail .rail-button, .contact-rail .rail-button:first-child { display: flex; gap: 7px; width: auto; height: 44px; padding: 0 14px; border-radius: 40px; background: none; box-shadow: none; color: white; font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .contact-rail .rail-quote, .contact-rail .rail-quote:first-child { background: var(--gold); color: var(--dark); }
+  [data-page="devis"] .contact-rail .rail-quote, [data-page="devis"] .contact-rail .rail-quote:first-child { display: none; }
+  .rail-label { display: inline; }
+  .back-to-top { bottom: calc(max(12px, env(safe-area-inset-bottom)) + 68px); inset-inline-end: 14px; min-width: 42px; min-height: 42px; border-radius: 50%; }
+  .site-footer { padding-bottom: 88px; }
+}
+@media (max-width: 360px) {
+  .contact-rail .rail-button, .contact-rail .rail-button:first-child { gap: 6px; padding: 0 10px; font-size: 12.5px; }
+}
+/* Phones: the history steps stack with their titles; the chosen chapter opens under its own step. */
+@media (max-width: 640px) {
+  .timeline { position: relative; display: flex; flex-direction: column; }
+  .timeline::before { content: ""; position: absolute; inset-block: 24px; inset-inline-start: 19px; width: 2px; border-radius: 2px; background: var(--line); }
+  .timeline-steps { display: contents; }
+  .timeline-steps::before, .timeline-steps::after { display: none; }
+  .timeline-steps button { order: calc(var(--i) * 2); flex-direction: row; align-items: center; gap: 16px; padding: 9px 0; font-size: 17px; text-align: start; }
+  .timeline-label { display: block; }
+  .timeline-panel { order: calc(var(--active) * 2 + 1); min-height: 0; margin: 0 0 12px; padding-inline-start: 56px; text-align: start; }
+  .timeline-copy h3 { display: none; }
+  .timeline-copy p { font-size: 16px; }
+}
 /* Photos drift slightly while they cross the screen, where the browser can tie motion to scrolling. */
 @media (prefers-reduced-motion: no-preference) {
   @supports (animation-timeline: view()) {

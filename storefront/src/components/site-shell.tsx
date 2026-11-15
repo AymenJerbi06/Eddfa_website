@@ -85,9 +85,9 @@ export function SiteShell({ locale, products, adminAvailable, children }: { loca
         <div className="container footer-bottom"><span>© 2026 {t.rights}</span>{(company.footerCreditApproved || process.env.NEXT_PUBLIC_EDDFA_SHOW_CREDIT === "true") && (adminAvailable ? <Link href="/admin" prefetch={false} aria-label={locale === "ar" ? "Made by Aymen · دخول الإدارة" : "Made by Aymen · Accès administration"}>Made by Aymen</Link> : <span>Made by Aymen</span>)}</div>
       </footer>
       <aside className="contact-rail" aria-label={t.contact}>
-        <Link className="rail-button rail-quote" href={`/${locale}/devis`} aria-label={t.quote} title={t.quote}><MessageCircle size={20} /></Link>
-        <a className="rail-button" href={`mailto:${company.email}`} aria-label={company.email} title={company.email}><Mail size={20} /></a>
-        <a className="rail-button" href={`tel:${company.telephone}`} aria-label={company.phone} title={company.phone}><Phone size={18} /></a>
+        <Link className="rail-button rail-quote" href={`/${locale}/devis`} aria-label={t.quote} title={t.quote}><MessageCircle size={20} /><span className="rail-label">{t.nav[5]}</span></Link>
+        <a className="rail-button" href={`mailto:${company.email}`} aria-label={company.email} title={company.email}><Mail size={20} /><span className="rail-label">{t.railMail}</span></a>
+        <a className="rail-button" href={`tel:${company.telephone}`} aria-label={company.phone} title={company.phone}><Phone size={18} /><span className="rail-label">{t.railCall}</span></a>
       </aside>
       {scrolled && <button type="button" className="back-to-top icon-button" aria-label={locale === "ar" ? "العودة إلى الأعلى" : "Retour en haut"} title={locale === "ar" ? "العودة إلى الأعلى" : "Retour en haut"} onClick={() => window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" })}><ArrowUp size={18} /></button>}
     </div>
