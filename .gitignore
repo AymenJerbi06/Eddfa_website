@@ -29,3 +29,5 @@ storefront/tsconfig.tsbuildinfo
 storefront/test-results/
 storefront/playwright-report/
 storefront/*server*.log
+
+.vercel

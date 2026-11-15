@@ -4,10 +4,12 @@ import "@fontsource-variable/bricolage-grotesque";
 import "@fontsource-variable/karla";
 import "@fontsource-variable/noto-sans-arabic";
 import "./globals.css";
+import "./layers.css";
+import "./signature.css";
 
 export const metadata: Metadata = {
   title: { default: "EDDFA | Sèche-serviettes en aluminium", template: "%s | EDDFA" },
-  description: "EDDFA, fabricant tunisien de sèche-serviettes en aluminium. EDEN à eau chaude et ECLAT électrique, à Sfax.",
+  description: "EDDFA, fabricant tunisien en aluminium à Sfax : sèche-serviettes EDEN et ECLAT, sèche-linge EOLE, manches à balai ECLIPSE et supports de tuyau ELAN.",
   robots: { index: false, follow: false },
   icons: { icon: "/eddfa/logo.ico" },
 };

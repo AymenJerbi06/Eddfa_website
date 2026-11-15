@@ -47,7 +47,8 @@ test("active image records only use existing EDDFA renditions", () => {
     assert.ok(path.startsWith("/eddfa/"));
     assert.ok(existsSync(new URL(`../public${path.replace(/\.webp$/, ".optimized.webp")}`, import.meta.url)), path);
   }
-  assert.equal(inspirations.length, 9);
+  assert.equal(inspirations.length, 11);
+  assert.equal(inspirations.filter(i => i.wide).length, 2);
   assert.ok(inspirations.every(i => i.id !== "0010"));
   assert.ok(existsSync(new URL("../public/eddfa/certificat-veritas-en442.pdf", import.meta.url)));
 });
