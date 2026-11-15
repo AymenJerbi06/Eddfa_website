@@ -89,9 +89,10 @@ export function SiteShell({ locale, products, adminAvailable, children }: { loca
       <a className="skip-link" href="#main-content">{t.skip}</a>
       <header className={`site-header${!home ? " solid" : ""}${stuck ? " stuck" : ""}${menuOpen ? " menu-expanded" : ""}`} onKeyDown={event => { if (event.key === "Escape" && menuOpen) { closeMenu(); mobileToggle.current?.focus(); } }}>
         <div className="header-inner"><Brand locale={locale} /><nav className="desktop-nav" aria-label={locale === "ar" ? "القائمة الرئيسية" : "Navigation principale"}><Navigation key={pathname} locale={locale} pathname={pathname} onNavigate={closeMenu} onReveal={pageArrival.reveal} /></nav>
+          {!quotePage && <Link className="header-quote" href={`/${locale}/devis`} onClick={closeMenu}>{t.nav[5]}</Link>}
           <button ref={mobileToggle} type="button" className="mobile-menu-button icon-button" aria-label={menuOpen ? t.close : t.menu} aria-expanded={menuOpen} aria-controls="mobile-navigation" onClick={() => setMenuOpen(open => !open)}>{menuOpen ? <X size={24} /> : <Menu size={24} />}</button>
         </div>
-        <nav id="mobile-navigation" className="mobile-nav" hidden={!menuOpen} aria-label={locale === "ar" ? "القائمة الرئيسية للجوال" : "Navigation mobile"}><Navigation key={pathname} locale={locale} pathname={pathname} mobile onNavigate={closeMenu} onReveal={pageArrival.reveal} /></nav>
+        <nav id="mobile-navigation" className="mobile-nav" hidden={!menuOpen} aria-label={locale === "ar" ? "القائمة الرئيسية للجوال" : "Navigation mobile"}><Navigation key={pathname} locale={locale} pathname={pathname} mobile onNavigate={closeMenu} onReveal={pageArrival.reveal} /><div className="mobile-contact"><a href={`tel:${company.telephone}`}><Phone size={17} />{t.railCall}</a><a href={`mailto:${company.email}`}><Mail size={18} />{t.railMail}</a></div></nav>
       </header>
       <main id="main-content">{children}</main>
       <footer className="site-footer">

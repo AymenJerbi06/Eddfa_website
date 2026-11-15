@@ -256,20 +256,25 @@
   .filmstrip .carousel-track { padding-block: 6px 24px; }
 }
 
-/* Phones and tablets: the three contact buttons stay, as one labelled dock at the bottom, clear of the content's
-   edges; back-to-top sits above it. */
-.rail-label { display: none; }
+/* Phones and tablets: nothing floats over the page. Devis sits in the header, next to the menu; calling and
+   writing are in the menu, the footer and the contact page. Only the small way-up button stays, in the corner. */
+.rail-label, .header-quote, .mobile-contact { display: none; }
 @media (max-width: 921px) {
-  .contact-rail { top: auto; bottom: max(12px, env(safe-area-inset-bottom)); inset-inline: auto; left: 50%; transform: translateX(-50%); flex-direction: row; gap: 2px; padding: 6px; border: 1px solid rgb(255 255 255 / 12%); border-radius: 40px; background: var(--dark); box-shadow: 0 10px 30px rgb(0 0 0 / 24%); transition: opacity .3s; }
-  .contact-rail .rail-button, .contact-rail .rail-button:first-child { display: flex; gap: 7px; width: auto; height: 44px; padding: 0 14px; border-radius: 40px; background: none; box-shadow: none; color: white; font-size: 13px; font-weight: 600; white-space: nowrap; }
-  .contact-rail .rail-quote, .contact-rail .rail-quote:first-child { background: var(--gold); color: var(--dark); }
-  [data-page="devis"] .contact-rail .rail-quote, [data-page="devis"] .contact-rail .rail-quote:first-child { display: none; }
-  .rail-label { display: inline; }
-  .back-to-top { bottom: calc(max(12px, env(safe-area-inset-bottom)) + 68px); inset-inline-end: 14px; min-width: 42px; min-height: 42px; border-radius: 50%; }
-  .site-footer { padding-bottom: 88px; }
+  .contact-rail { display: none; }
+  .header-inner { gap: 10px; }
+  .header-quote { position: relative; display: inline-flex; align-items: center; min-height: 38px; margin-inline-start: auto; padding: 0 16px; border-radius: 40px; background: var(--gold); color: var(--dark); font-size: 14px; font-weight: 700; white-space: nowrap; transition: scale .45s var(--spring); }
+  .header-quote::after { content: ""; position: absolute; inset: -4px -2px; }
+  .header-quote:active { scale: .96 .92; transition-duration: var(--press); }
+  .header-quote + .mobile-menu-button { margin-inline-start: 0; }
+  .mobile-contact { display: flex; gap: 10px; margin-top: 6px; padding: 14px 20px 12px; border-top: 1px solid rgb(255 255 255 / 10%); }
+  .mobile-contact a { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; border: 1px solid rgb(255 255 255 / 24%); border-radius: 40px; color: white; font-size: 14px; font-weight: 600; }
+  .mobile-contact a:active { background: rgb(255 255 255 / 10%); }
+  .back-to-top { bottom: max(16px, env(safe-area-inset-bottom)); inset-inline-end: 14px; min-width: 42px; min-height: 42px; border-radius: 50%; }
 }
-@media (max-width: 360px) {
-  .contact-rail .rail-button, .contact-rail .rail-button:first-child { gap: 6px; padding: 0 10px; font-size: 12.5px; }
+@media (max-width: 350px) {
+  .header-inner { gap: 8px; }
+  .site-header .brand-logo { width: 128px; height: auto; }
+  .header-quote { padding: 0 11px; font-size: 13px; }
 }
 /* Phones: the history steps stack with their titles; the chosen chapter opens under its own step. */
 @media (max-width: 640px) {
@@ -337,6 +342,7 @@
 .catalog-item:hover .catalog-photo img:not(.card-second) { transform: scale(1.04); }
 :is(.breadcrumbs a, .language-link) { position: relative; }
 :is(.breadcrumbs a, .language-link)::after { content: ""; position: absolute; inset: 50% -6px auto; height: 44px; translate: 0 -50%; }
+.site-shell .language-link::after { inset-inline: 0; }
 .read-more summary, .sizing-alternatives a { min-height: 44px; }
 .slider-field input[type="range"] { height: 44px; padding-block: 19px; }
 .carousel-pause::after { content: ""; position: absolute; inset: -6px; }
