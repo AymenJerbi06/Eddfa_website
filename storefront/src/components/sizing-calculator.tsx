@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { messages, type Locale, type ProductFamily, type ProductVariant } from "@/lib/content";
 import { formatDecimal, insulationCoefficients, insulationLevels, recommend, requiredPower, sizingRanges, type Insulation } from "@/lib/sizing";
@@ -31,6 +31,19 @@ export function SizingCalculator({ locale, family }: { locale: Locale; family: P
   const [surface, setSurface] = useState<number>(sizingRanges.surface.initial);
   const [ceiling, setCeiling] = useState<number>(sizingRanges.ceiling.initial);
   const [insulation, setInsulation] = useState<Insulation>("average");
+  // Frequency of use: the visitor's last room is kept for the visit, so coming back to the tool does not start again.
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(window.sessionStorage.getItem("eddfa-room") ?? "null") as { surface?: number; ceiling?: number; insulation?: Insulation } | null;
+      if (!saved) return;
+      if (typeof saved.surface === "number" && saved.surface >= sizingRanges.surface.min && saved.surface <= sizingRanges.surface.max) setSurface(saved.surface);
+      if (typeof saved.ceiling === "number" && saved.ceiling >= sizingRanges.ceiling.min && saved.ceiling <= sizingRanges.ceiling.max) setCeiling(saved.ceiling);
+      if (saved.insulation && insulationLevels.includes(saved.insulation)) setInsulation(saved.insulation);
+    } catch { /* private mode or a damaged entry: the defaults stay */ }
+  }, []);
+  useEffect(() => {
+    try { window.sessionStorage.setItem("eddfa-room", JSON.stringify({ surface, ceiling, insulation })); } catch { /* storage unavailable */ }
+  }, [surface, ceiling, insulation]);
   const power = requiredPower(surface, ceiling, insulation);
   const shownPower = useTweenedNumber(power);
   if (!family.sizing) return null;

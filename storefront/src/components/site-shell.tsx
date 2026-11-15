@@ -66,8 +66,26 @@ export function SiteShell({ locale, products, adminAvailable, children }: { loca
     return () => window.removeEventListener("scroll", update);
   }, [locale]);
   const closeMenu = () => { setMenuOpen(false); pageArrival.cancel(); };
+  // Doherty threshold: a thin line answers every internal link at once, while the page itself arrives.
+  const [routing, setRouting] = useState(false);
+  useEffect(() => { setRouting(false); }, [pathname]);
+  useEffect(() => {
+    let timer = 0;
+    const start = (event: MouseEvent) => {
+      const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>("a[href]") : null;
+      if (!link || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || link.target || link.hasAttribute("download")) return;
+      const url = new URL(link.href, window.location.href);
+      if (url.origin !== window.location.origin || url.pathname === window.location.pathname || /\.[a-z0-9]+$/i.test(url.pathname)) return;
+      setRouting(true);
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => setRouting(false), 8000);
+    };
+    document.addEventListener("click", start, true);
+    return () => { document.removeEventListener("click", start, true); window.clearTimeout(timer); };
+  }, []);
   return <CatalogContext.Provider value={products}>
     <div lang={locale} dir={locale === "ar" ? "rtl" : "ltr"} className="site-shell" data-page={quotePage ? "devis" : undefined}>
+      {routing && <span className="route-progress" aria-hidden="true" />}
       <a className="skip-link" href="#main-content">{t.skip}</a>
       <header className={`site-header${!home ? " solid" : ""}${stuck ? " stuck" : ""}${menuOpen ? " menu-expanded" : ""}`} onKeyDown={event => { if (event.key === "Escape" && menuOpen) { closeMenu(); mobileToggle.current?.focus(); } }}>
         <div className="header-inner"><Brand locale={locale} /><nav className="desktop-nav" aria-label={locale === "ar" ? "القائمة الرئيسية" : "Navigation principale"}><Navigation key={pathname} locale={locale} pathname={pathname} onNavigate={closeMenu} onReveal={pageArrival.reveal} /></nav>

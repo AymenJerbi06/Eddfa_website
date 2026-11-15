@@ -53,10 +53,10 @@ export function InquiryForm({ locale, initialProduct = "", initialVariant = "" }
   </div>;
   return <form className="inquiry-form" onSubmit={submit}>
     <div className="form-row">
-      <label htmlFor={`${id}-name`}>{t.name}<input id={`${id}-name`} name="name" autoComplete="name" required maxLength={100} /></label>
+      <label htmlFor={`${id}-name`}>{t.name}<input id={`${id}-name`} name="name" autoComplete="name" required maxLength={100} onBlur={e => { e.currentTarget.value = e.currentTarget.value.replace(/\s+/g, " ").trim(); }} /></label>
       <label htmlFor={`${id}-phone`}>{t.phone}<input id={`${id}-phone`} name="phone" autoComplete="tel" type="tel" inputMode="tel" dir="ltr" required maxLength={24} placeholder="31 547 491" onInput={e => e.currentTarget.setCustomValidity("")} /></label>
     </div>
-    <label htmlFor={`${id}-email`}>{t.email}<input id={`${id}-email`} name="email" autoComplete="email" type="email" dir="ltr" maxLength={254} /></label>
+    <label htmlFor={`${id}-email`}>{t.email}<input id={`${id}-email`} name="email" autoComplete="email" type="email" dir="ltr" maxLength={254} onBlur={e => { e.currentTarget.value = e.currentTarget.value.trim().toLowerCase(); }} /></label>
     <div className="form-row">
       <label htmlFor={`${id}-region`}>{t.region}<select id={`${id}-region`} name="region" required defaultValue=""><option value="" disabled>{t.chooseRegion}</option>{governorates.map(g => <option key={g.fr} value={g.fr}>{g[locale]}</option>)}</select></label>
       <label htmlFor={`${id}-product`}>{t.product}<select id={`${id}-product`} name="product" value={productId} onChange={e => { setProductId(e.target.value); setVariantId(""); }}><option value="">{t.chooseProduct}</option>{products.map(p => <option key={p.id} value={p.id}>{p.title[locale]}</option>)}</select></label>

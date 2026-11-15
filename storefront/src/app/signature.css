@@ -278,6 +278,85 @@
   .timeline-copy h3 { display: none; }
   .timeline-copy p { font-size: 16px; }
 }
+/*
+  Motion and ease of use (November 2026). The twelve principles of animation, kept quiet: nothing bounces for show.
+  Every pressable thing gives under the finger and springs back, arrows gather before they move, parts of a section
+  settle one after another, and cards have a little depth under the pointer. All of it stops for reduced motion.
+*/
+:root { --spring: cubic-bezier(.34, 1.56, .64, 1); --press: .09s; }
+@keyframes settle { 0% { opacity: 0; translate: 0 22px; } 70% { opacity: 1; translate: 0 -2px; } 100% { opacity: 1; translate: 0 0; } }
+@keyframes wind-up { 0% { translate: 0 0; } 35% { translate: -3px 0; } 100% { translate: 2px 0; } }
+@keyframes wind-up-rtl { 0% { translate: 0 0; } 35% { translate: 3px 0; } 100% { translate: -2px 0; } }
+@keyframes dip-rise { 0% { translate: 0 0; } 35% { translate: 0 2px; } 100% { translate: 0 -2px; } }
+@keyframes arc-in { 0% { opacity: 0; translate: 16px 20px; rotate: 24deg; } 60% { opacity: 1; translate: -2px -3px; rotate: -3deg; } 100% { translate: 0 0; rotate: 0deg; } }
+@keyframes pop { 0% { scale: 1; } 40% { scale: 1.04 .97; } 100% { scale: 1; } }
+@keyframes ring { from { box-shadow: 0 0 0 0 rgb(210 170 86 / 55%); } to { box-shadow: 0 0 0 12px rgb(210 170 86 / 0%); } }
+@keyframes mark-in { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes mark-in-rtl { from { clip-path: inset(0 0 0 100%); } to { clip-path: inset(0 0 0 0); } }
+@keyframes shimmer { from { background-position: 120% 0; } to { background-position: -20% 0; } }
+@keyframes route-progress { from { transform: scaleX(0); } to { transform: scaleX(.94); } }
+
+/* Squash and stretch, snappy timing: pressed things flatten a touch at once and spring back. */
+.site-shell :is(.pill-button:not(.light), .icon-button, .rail-button, .card-flip, .finish-dot, .back-to-top, .mobile-menu-button) { transition: background .2s, color .2s, border-color .2s, opacity .3s, box-shadow .25s var(--ease), transform .25s var(--ease), scale .45s var(--spring); -webkit-tap-highlight-color: transparent; }
+.site-shell :is(.pill-button:not(.light), .rail-button, .finish-dot, .card-flip):active { scale: .97 .93; transition-duration: .2s, .2s, .2s, .3s, .25s, .25s, var(--press); }
+.site-shell :is(.icon-button, .back-to-top, .mobile-menu-button):active { scale: .9; transition-duration: .2s, .2s, .2s, .3s, .25s, .25s, var(--press); }
+.site-shell :is(.showcase-tab, .segmented label, .thumbnails button, .timeline-steps button, .soft-details summary):active { opacity: .72; }
+/* Anticipation: arrows pull back a hair before they go; the way up dips first. */
+.site-shell :is(.pill-button:not(.light), .text-link, .catalog-item):hover .directional-icon { animation: wind-up .5s var(--ease) forwards; }
+[dir="rtl"] .site-shell :is(.pill-button:not(.light), .text-link, .catalog-item):hover .directional-icon { animation-name: wind-up-rtl; }
+.back-to-top:hover svg { animation: dip-rise .5s var(--ease) forwards; }
+/* Arcs: the way-up button swings in instead of popping. */
+.back-to-top { animation: arc-in .6s var(--ease) both; }
+/* Pose to pose, follow through and overlapping action: the parts of a section settle one after another,
+   a little past their place and back. Secondary action: the label's mark draws itself. */
+.section-reveal[data-visible="false"] :is(.section-heading, .about-copy, .faq-intro, .faq-list, .catalog-grid) > * { opacity: 0; }
+.section-reveal[data-visible="true"] :is(.section-heading, .about-copy, .faq-intro, .faq-list, .catalog-grid) > * { animation: settle .8s var(--ease) backwards; }
+.section-reveal[data-visible="true"] :is(.section-heading, .about-copy, .faq-intro, .faq-list, .catalog-grid) > :nth-child(2) { animation-delay: .08s; }
+.section-reveal[data-visible="true"] :is(.section-heading, .about-copy, .faq-intro, .faq-list, .catalog-grid) > :nth-child(3) { animation-delay: .16s; }
+.section-reveal[data-visible="true"] :is(.section-heading, .about-copy, .faq-intro, .faq-list, .catalog-grid) > :nth-child(4) { animation-delay: .24s; }
+.section-reveal[data-visible="true"] :is(.section-heading, .about-copy, .faq-intro, .faq-list, .catalog-grid) > :nth-child(n + 5) { animation-delay: .32s; }
+.section-reveal[data-visible="true"] .eyebrow::before { animation: mark-in .7s var(--ease) .25s both; }
+[dir="rtl"] .section-reveal[data-visible="true"] .eyebrow::before { animation-name: mark-in-rtl; }
+/* Exaggerated feedback, where it counts: a ticked article answers with a ring, the count and the dots pop. */
+.quote-line.selected { animation: pop .4s var(--ease); }
+.quote-line.selected input[type="checkbox"] { animation: ring .6s var(--ease); }
+.quote-count { animation: pop .45s var(--ease); }
+.card-flip[aria-pressed="false"] span:first-child, .card-flip[aria-pressed="true"] span:last-child { scale: 1.35; }
+.card-flip span { transition: background .3s, scale .4s var(--spring); }
+/* Doherty threshold: a line answers every link at once, and empty photo frames show they are loading. */
+.route-progress { position: fixed; z-index: 70; inset: 0 0 auto; height: 3px; background: var(--gold); box-shadow: 0 0 12px rgb(210 170 86 / 70%); transform-origin: left center; animation: route-progress 6s cubic-bezier(.08, .82, .17, 1) forwards; pointer-events: none; }
+[dir="rtl"] .route-progress { transform-origin: right center; }
+:is(.catalog-photo:not(.drawn), .project-tile, .detail-photo, .about-photo, .sizing-thumb) { background-image: linear-gradient(100deg, rgb(255 255 255 / 0%) 40%, rgb(255 255 255 / 75%) 50%, rgb(255 255 255 / 0%) 60%); background-size: 220% 100%; background-repeat: no-repeat; animation: shimmer 1.3s ease-in-out 3; }
+/* Fitts: bigger targets. The whole article card answers, small links get a full-height hit area. */
+.catalog-item-caption :is(h2, h3) a::after { content: ""; position: absolute; inset: 0; z-index: 1; border-radius: 18px; }
+.catalog-item:hover .catalog-photo img:not(.card-second) { transform: scale(1.04); }
+:is(.breadcrumbs a, .language-link) { position: relative; }
+:is(.breadcrumbs a, .language-link)::after { content: ""; position: absolute; inset: 50% -6px auto; height: 44px; translate: 0 -50%; }
+.read-more summary, .sizing-alternatives a { min-height: 44px; }
+.slider-field input[type="range"] { height: 44px; padding-block: 19px; }
+.carousel-pause::after { content: ""; position: absolute; inset: -6px; }
+@media (pointer: coarse) {
+  .footer-grid li a, .footer-email, .footer-grid address a { display: inline-flex; align-items: center; min-height: 40px; }
+  .footer-email { margin-top: 4px; }
+  .contact-details > a { align-items: center; min-height: 44px; margin-bottom: 8px; }
+}
+/* Jakob: on a computer the three side buttons say what they do when pointed at, like any action rail. */
+@media (min-width: 922px) and (hover: hover) {
+  .contact-rail .rail-button { position: relative; }
+  .contact-rail .rail-label { position: absolute; inset-inline-end: calc(100% + 10px); top: 50%; display: block; padding: 7px 12px; border-radius: 10px; background: var(--dark); color: white; font-size: 13px; font-weight: 600; white-space: nowrap; opacity: 0; translate: 6px -50%; pointer-events: none; transition: opacity .2s, translate .3s var(--ease); }
+  [dir="rtl"] .contact-rail .rail-label { translate: -6px -50%; }
+  .contact-rail .rail-button:is(:hover, :focus-visible) .rail-label { opacity: 1; translate: 0 -50%; }
+}
+/* Staging and solid drawing: one card holds the eye while the others step back; it leans toward the pointer in depth. */
+@media (hover: hover) and (pointer: fine) {
+  .catalog-item, .mosaic .project-tile { transition: opacity .35s var(--ease); }
+  .catalog-grid:has(.catalog-item:hover) .catalog-item:not(:hover), .mosaic:has(.project-tile:hover) .project-tile:not(:hover) { opacity: .66; }
+  .catalog-item { perspective: 1100px; }
+  .catalog-item:hover .catalog-photo { transform: translateY(-4px) rotateX(calc(var(--ty, 0) * -5deg)) rotateY(calc(var(--tx, 0) * 5deg)); transition: transform .18s var(--ease), box-shadow .45s var(--ease); }
+  .catalog-photo::after { content: ""; position: absolute; inset: 0; z-index: 1; border-radius: inherit; background: radial-gradient(circle at calc(50% + var(--tx, 0) * 100%) calc(50% + var(--ty, 0) * 100%), rgb(255 255 255 / 20%), rgb(255 255 255 / 0%) 55%); opacity: 0; transition: opacity .4s; pointer-events: none; }
+  .catalog-item:hover .catalog-photo::after { opacity: 1; }
+}
+
 /* Photos drift slightly while they cross the screen, where the browser can tie motion to scrolling. */
 @media (prefers-reduced-motion: no-preference) {
   @supports (animation-timeline: view()) {
@@ -298,6 +377,11 @@
   .mosaic .project-tile img, .catalog-photo .card-second, .finish-dot { transition: none; }
   .about-plate { transition: none; }
   .section-reveal[data-visible="false"] .about-plate { opacity: 1; }
+  .site-shell :is(.pill-button, .icon-button, .rail-button, .card-flip, .finish-dot, .back-to-top, .mobile-menu-button):active { scale: none; }
+  .section-reveal[data-visible="true"] :is(.section-heading, .about-copy, .faq-intro, .faq-list, .catalog-grid) > *, .section-reveal[data-visible="true"] .eyebrow::before, .back-to-top, .back-to-top:hover svg, .quote-line.selected, .quote-line.selected input[type="checkbox"], .quote-count, .route-progress, :is(.catalog-photo, .project-tile, .detail-photo, .about-photo, .sizing-thumb), .site-shell :is(.pill-button, .text-link, .catalog-item):hover .directional-icon { animation: none; }
+  .section-reveal[data-visible="false"] :is(.section-heading, .about-copy, .faq-intro, .faq-list, .catalog-grid) > * { opacity: 1; }
+  .catalog-item:hover .catalog-photo { transform: none; }
+  .route-progress { transform: scaleX(.94); }
 }
 @media print {
   .facts-marquee, .catalog-quick { display: none !important; }
