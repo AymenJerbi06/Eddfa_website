@@ -6,7 +6,7 @@ Customized October 8, 2026 using the user-supplied ../Images+Products folder. No
 
 | Local stem in public/eddfa | Supplied source | Use |
 | --- | --- | --- |
-| logo | Branding/logo_transparent.png | Header, menu and footer; original grey/red colors and transparency retained. |
+| logo | Branding/logo_transparent.png | Admin pages. Since 25 November 2026 the site's header, footer and page curtain draw the same logo as shapes (`src/components/logo.tsx`): traced from this file at full size (2162 × 561), its grey (168 169 173) and red (237 28 37) measured on it, checked side by side with the picture. |
 | logo-card | Branding/logo.png | Imported alternate, not displayed. |
 | logo.ico | Branding/logo.ico | Favicon, copied unchanged. |
 | en442 | Branding/logo_euronorm_EN442_certification.png | Historical technical-document section on About only. |

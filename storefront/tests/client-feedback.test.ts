@@ -326,6 +326,21 @@ test("the guide asks one question at a time; on phones the close-up's card and t
   assert.ok(css.includes(".guide-step.from-next") && css.includes(".details-card { grid-area: card;"), "the steps slide in; the card has its place on phones");
 });
 
+// The user, 25 November 2026 (night): the logo animated between pages and on every load, like the leaf on Rayda's site.
+test("the logo is drawn, builds itself on the curtain between pages and on every load, and warms up in the header", () => {
+  const logo = source("../src/components/logo.tsx");
+  assert.ok(logo.includes('viewBox="-16 -16 2162 561"') && !/fill="#|fill='#/.test(logo), "the drawing keeps the picture's place and takes its colours from CSS");
+  assert.equal((logo.match(/^  "M/gm) ?? []).length, 4, "four letters: D, D, F, A");
+  assert.ok(logo.includes("const bars: [number, number][] = [[466, 33], [417, 33], [290, 33], [240, 34], [90, 33], [41, 33]];"), "six bars in three pairs, measured on the logo");
+  const shell = source("../src/components/site-shell.tsx");
+  assert.ok(shell.includes("<EddfaLogo className=\"brand-logo\"") && !shell.includes("logo.optimized.webp"), "the header and footer show the drawn logo");
+  assert.ok(shell.includes("<div className={`page-curtain is-${curtain}`}") && shell.includes('<EddfaLogo className="curtain-logo" />'), "the curtain carries the logo");
+  assert.ok(shell.includes('if (link.hasAttribute("aria-haspopup") || link.hasAttribute("data-no-curtain")) return;'), "a model chip opens its quick view without the curtain");
+  assert.ok(shell.includes('useState<CurtainPhase>("intro")') && shell.includes('show("leaving")') && shell.includes('show("arriving")'), "on load, when leaving and when arriving");
+  const css = source("../src/app/signature.css");
+  assert.ok(css.includes(".page-curtain.is-intro { animation: curtain-lift") && css.includes(".page-curtain.is-leaving { pointer-events: auto; animation: curtain-cover") && css.includes(".page-curtain { display: none !important; }"), "the curtain lifts by itself and stays away for reduced motion");
+});
+
 test("contact and quote: EDDFA's number is never the example, WhatsApp appears only once EDDFA confirms its number", () => {
   for (const file of ["inquiry-form", "quote-builder"]) assert.ok(!source(`../src/components/${file}.tsx`).includes('placeholder="31 547 491"'), `${file}: neutral example`);
   assert.equal(company.whatsapp, null);

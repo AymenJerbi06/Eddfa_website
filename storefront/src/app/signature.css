@@ -920,3 +920,63 @@
   .catalog-item-caption :is(h2, h3) { font-size: 17px; }
 }
 
+/* EDDFA's logo, drawn (components/logo.tsx): the radiator E in the logo's grey, the letters in its red. Its bars sit
+   behind the rails, so when they warm up the rails stay aluminium. */
+.eddfa-logo { --logo-grey: rgb(168 169 173); --logo-red: rgb(237 28 37); display: block; overflow: visible; }
+.eddfa-logo :is(.lg-bar, .lg-rail) { fill: var(--logo-grey); }
+.eddfa-logo .lg-letter { fill: var(--logo-red); }
+.eddfa-logo .lg-rail { transform-box: fill-box; transform-origin: 50% 100%; }
+.eddfa-logo .lg-bar { transform-box: fill-box; transform-origin: 0 50%; }
+.eddfa-logo .lg-letter { transform-box: fill-box; transform-origin: 50% 100%; }
+/* Warmth running up the radiator: each bar goes from aluminium to brass and back, the lowest first. */
+@keyframes lg-heat { 0%, 100% { fill: var(--logo-grey); } 38%, 58% { fill: var(--brass-light); filter: drop-shadow(0 0 22px rgb(212 181 124 / 75%)); } }
+@keyframes lg-heat-again { 0%, 100% { fill: var(--logo-grey); } 38%, 58% { fill: var(--brass-light); filter: drop-shadow(0 0 22px rgb(212 181 124 / 75%)); } }
+.site-header .brand-logo .lg-bar { animation: lg-heat 1s ease-in-out calc(var(--heat-delay, 1.7s) + var(--i) * 80ms) both; }
+.brand:hover .brand-logo .lg-bar { animation: lg-heat-again 0.9s ease-in-out calc(var(--i) * 70ms) both; }
+
+/* The curtain between pages (site-shell.tsx), the way the leaf moves on Rayda's site. */
+@keyframes curtain-lift { 0% { clip-path: ellipse(150% 150% at 50% 0%); } 100% { clip-path: ellipse(150% 0% at 50% 0%); visibility: hidden; } }
+@keyframes curtain-cover { from { clip-path: circle(0 at var(--cx, 50%) var(--cy, 50%)); } to { clip-path: circle(150vmax at var(--cx, 50%) var(--cy, 50%)); } }
+@keyframes lg-rail-in { from { transform: scaleY(0); } }
+@keyframes lg-bar-in { from { transform: translateX(-30%); opacity: 0; } }
+@keyframes lg-letter-in { from { transform: translateY(22%); opacity: 0; } }
+@keyframes curtain-glow { 0% { opacity: 0; scale: 0.7; } 55% { opacity: 1; } 100% { opacity: 0.4; scale: 1; } }
+@keyframes curtain-tagline { from { opacity: 0; translate: 0 10px; } }
+@keyframes curtain-away { to { transform: translateY(-22px); opacity: 0; } }
+.page-curtain { position: fixed; inset: 0; z-index: 1000; display: grid; place-content: center; justify-items: center; gap: clamp(14px, 1.4vw + 6px, 24px); background: var(--graphite); pointer-events: none; }
+.page-curtain.is-idle { display: none; }
+.curtain-logo { position: relative; width: clamp(210px, 26vw + 40px, 400px); height: auto; }
+.curtain-tagline { position: relative; color: var(--on-dark-soft); font-size: clamp(11px, 0.4vw + 8px, 14px); font-weight: 600; letter-spacing: 0.34em; }
+[dir="rtl"] .curtain-tagline { letter-spacing: 0; }
+.curtain-glow { position: absolute; top: 50%; left: 50%; width: min(86vw, 780px); height: min(86vw, 780px); translate: -50% -50%; border-radius: 50%; background: radial-gradient(circle, rgb(201 169 110 / 20%) 0%, rgb(201 169 110 / 6%) 38%, rgb(201 169 110 / 0%) 64%); opacity: 0; }
+/* Opening, on every load: the rails rise, the bars slide in from the bottom pair up, the letters follow, the warmth
+   runs up, then the curtain lifts from the bottom and the logo rises away (1.85 s in all). */
+.page-curtain.is-intro { animation: curtain-lift 0.6s cubic-bezier(0.7, 0, 0.2, 1) 1.25s forwards; }
+.page-curtain.is-intro .lg-rail { animation: lg-rail-in 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) 0.05s both; }
+.page-curtain.is-intro .lg-rail-r { animation-delay: 0.14s; }
+.page-curtain.is-intro .lg-bar { animation: lg-bar-in 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) calc(0.24s + var(--i) * 55ms) both, lg-heat 0.8s ease-in-out calc(0.72s + var(--i) * 60ms) both; }
+.page-curtain.is-intro .lg-letter { animation: lg-letter-in 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) calc(0.42s + var(--i) * 70ms) both; }
+.page-curtain.is-intro .curtain-glow { animation: curtain-glow 1.1s ease-out 0.62s both; }
+.page-curtain.is-intro .curtain-logo { animation: curtain-away 0.5s cubic-bezier(0.5, 0, 0.75, 0) 1.25s forwards; }
+.page-curtain.is-intro .curtain-tagline { animation: curtain-tagline 0.7s ease-out 0.72s both, curtain-away 0.5s cubic-bezier(0.5, 0, 0.75, 0) 1.25s forwards; }
+/* Leaving a page: the curtain grows from the clicked spot, the logo builds faster and stays warm until the next page
+   is here. */
+.page-curtain.is-leaving { pointer-events: auto; animation: curtain-cover 0.5s cubic-bezier(0.7, 0, 0.2, 1) both; }
+.page-curtain.is-leaving .lg-rail { animation: lg-rail-in 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) 0.1s both; }
+.page-curtain.is-leaving .lg-rail-r { animation-delay: 0.16s; }
+.page-curtain.is-leaving .lg-bar { animation: lg-bar-in 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) calc(0.18s + var(--i) * 35ms) both, lg-heat 1.2s ease-in-out calc(0.45s + var(--i) * 70ms) infinite; }
+.page-curtain.is-leaving .lg-letter { animation: lg-letter-in 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) calc(0.26s + var(--i) * 45ms) both; }
+.page-curtain.is-leaving .curtain-glow { animation: curtain-glow 0.9s ease-out 0.35s both; }
+.page-curtain.is-leaving .curtain-tagline { animation: curtain-tagline 0.5s ease-out 0.4s both; }
+/* Arriving: the next page is underneath; the curtain lifts and the logo rises away. */
+.page-curtain.is-arriving { animation: curtain-lift 0.6s cubic-bezier(0.7, 0, 0.2, 1) forwards; }
+.page-curtain.is-arriving .curtain-glow { opacity: 0.4; }
+.page-curtain.is-arriving :is(.curtain-logo, .curtain-tagline) { animation: curtain-away 0.45s cubic-bezier(0.5, 0, 0.75, 0) forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .page-curtain { display: none !important; }
+  .site-header .brand-logo .lg-bar, .brand:hover .brand-logo .lg-bar { animation: none; }
+}
+@media print {
+  .page-curtain { display: none !important; }
+}
+
