@@ -1,5 +1,6 @@
 export function normalizeTunisianPhone(input: string): string | null {
-  const ascii = input.replace(/[٠-٩]/g, (n) => String("٠١٢٣٤٥٦٧٨٩".indexOf(n)));
+  // Postel's law: Arabic digits (and their Persian forms, from some phone keyboards) count as digits.
+  const ascii = input.replace(/[٠-٩]/g, (n) => String("٠١٢٣٤٥٦٧٨٩".indexOf(n))).replace(/[۰-۹]/g, (n) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(n)));
   if (!/^[+\d\s()./-]+$/.test(ascii)) return null;
   let digits = ascii.replace(/\D/g, "");
   if (digits.startsWith("00216")) digits = digits.slice(5);

@@ -15,7 +15,7 @@ const source = (path: string) => readFileSync(new URL(path, import.meta.url), "u
 // in the same style on 25 November 2026, and on 26 November it got « Voir nos produits » under « Contactez-nous » and
 // charcoal words on the bright marble, at the user's request.
 test("the home page hero keeps its words and layout, with its new photo", () => {
-  const hero = "<section className=\"hero\"><Photo src={asset(\"hero-eden\")} alt=\"\" priority sizes=\"100vw\" className=\"hero-poster\" /><div className=\"hero-shade\" /><div className=\"container hero-content\"><h1><span className=\"hero-brand\">EDDFA</span>{t.heroTitle}</h1><p>{t.heroText}</p><div className=\"hero-actions\"><Link href={`/${locale}/contact`} className=\"pill-button light\">{t.contact}</Link><Link href={`/${locale}/produits`} className=\"pill-button light hero-products\">{t.heroProducts}</Link></div></div><HeroNext label={t.what} target=\"about-eddfa\" /></section>";
+  const hero = "<section className=\"hero\"><HeroPhoto wide={asset(\"hero-eden\")} tall={asset(\"hero-eden-phone\")} className=\"hero-poster\" /><div className=\"hero-shade\" /><div className=\"container hero-content\"><h1><span className=\"hero-brand\">EDDFA</span>{t.heroTitle}</h1><p>{t.heroText}</p><div className=\"hero-actions\"><Link href={`/${locale}/contact`} className=\"pill-button light\">{t.contact}</Link><Link href={`/${locale}/produits`} className=\"pill-button light hero-products\">{t.heroProducts}</Link></div></div><HeroNext label={t.what} target=\"about-eddfa\" /></section>";
   assert.ok(source("../src/components/pages.tsx").includes(hero));
   assert.deepEqual([messages.fr.heroTitle, messages.fr.heroText, messages.fr.contact, messages.fr.what], ["Sèche-serviettes en aluminium.", "Fabriqués à Sfax. À eau chaude ou électriques, trouvez le confort qui s’accorde à votre salle de bain.", "Contactez-nous", "FABRICANT TUNISIEN"]);
   assert.deepEqual([messages.ar.heroTitle, messages.ar.heroText, messages.ar.contact, messages.ar.what], ["مجففات مناشف من الألمنيوم.", "صُنعت في صفاقس. بالماء الساخن أو بالكهرباء، اختر الراحة المناسبة لحمامك.", "اتصل بنا", "صناعة تونسية"]);
@@ -138,7 +138,7 @@ test("EDDFA's mark is the radiator of its logo, and every range and model stays 
   assert.ok((pages.match(/<Emblem /g) ?? []).length >= 8, "the symbol sits behind the sections of every page");
   assert.ok(pages.includes('<PageTrack label={t.rangesNav} links={families.map(item => ({ href: `/${locale}/produits/${item.id}`'), "every range page switches between the five ranges");
   const catalog = source("../src/components/catalog.tsx");
-  assert.ok(catalog.includes('<RangeNav tone="light" label={`${t.modelsNav} ${family.name}`}'), "article pages switch between the models of their range");
+  assert.ok(catalog.includes('<RangeNav label={`${t.modelsNav} ${family.name}`}'), "article pages switch between the models of their range");
   assert.match(source("../src/components/sizing-calculator.tsx"), /<WarmRadiators key=\{`\$\{best\.variant\.id\}-\$\{best\.units\}`\} units=\{best\.units\}/, "the calculator's radiator warms up again whenever the advice changes");
   assert.ok(source("../src/components/site-shell.tsx").includes('${stuck ? " stuck" : ""}'), "a compact header follows past the first screen");
 });
@@ -208,7 +208,7 @@ test("EDDFA's own look (Aluminium & Confort), nothing borrowed", () => {
     assert.match(css, new RegExp(`\\${selector} \\{[^}]*background: var\\(--marble\\)`), `${selector} sits on the marble ground`);
   }
   for (const dark of [".band", ".ranges-section", ".pro-section", ".commitment", ".call-to-action", ".site-footer"]) assert.match(css, new RegExp(`\\${dark} \\{[^}]*background: var\\(--graphite\\)`), `${dark} is charcoal`);
-  assert.ok(css.includes(".site-shell main { background: var(--graphite); }") && css.includes("main > :not(.band) + .plate { margin-top: var(--inset); }"), "the page is charcoal, and two plates never touch");
+  assert.ok(css.includes(".site-shell main { display: flow-root; background: var(--graphite); }") && css.includes("main > :not(.band) + .plate { margin-top: var(--inset); }"), "the page is charcoal, even above a first plate, and two plates never touch");
   assert.ok(!/#e[0-9a-f]1c2[0-9a-f]|#f01d27|:\s*red\b/i.test(css), "no red outside the logo");
   const pages = source("../src/components/pages.tsx");
   assert.ok(pages.includes('<figure className="cta-film"><ScrubFilm name="closer" alt={t.closerAlt} /></figure>'), "the closer shows the first section's bathroom, filmed");
@@ -316,7 +316,7 @@ test("the guide asks one question at a time; on phones the close-up's card and t
   const guide = source("../src/components/guide.tsx");
   assert.ok(guide.includes("const RESULT = 3;") && guide.includes("{step === 0 && <fieldset") && guide.includes("{step === 1 && <fieldset") && guide.includes("{step === 2 && <fieldset") && guide.includes("{step === RESULT && <div className=\"guide-result\">"), "one question per step, then the answer");
   assert.ok(guide.includes("<form key={step}") && guide.includes("onClick={() => go(step - 1)}") && guide.includes("onClick={() => go(n)}"), "the next question takes the place of the last; « Retour » and the answers so far go back");
-  assert.ok(guide.includes("if (step === 0 && !range) { setMissing(true); return; }"), "« Continuer » asks for an answer first");
+  assert.ok(guide.includes("if (step === 0 && !range) { setMissing(true); shake(choices.current); return; }"), "« Continuer » asks for an answer first (and the answers shake, since 26 November 2026)");
   for (const locale of ["fr", "ar"] as const) {
     const t = messages[locale];
     assert.equal(t.guideSteps.length, 3);
@@ -376,7 +376,7 @@ test("photos: products, ranges and galleries show the new scenes only, each reco
   }
   for (const file of ["catalog", "galleries", "showcase", "pages", "sizing-calculator"]) assert.ok(!source(`../src/components/${file}.tsx`).includes("scene-chip"), `${file}: no label on the photos`);
   const pages = source("../src/components/pages.tsx");
-  assert.ok(pages.includes('<section className="hero"><Photo src={asset("hero-eden")}'), "the first section shows its new photo");
+  assert.ok(pages.includes('<section className="hero"><HeroPhoto wide={asset("hero-eden")} tall={asset("hero-eden-phone")}'), "the first section shows its new photo, and phones its tall version");
   for (const name of ["hero-eden", "hero-eden-alt1", "hero-eden-alt2", "scene-eden-80-before", "scene-eden-80-after"]) {
     assert.ok(provenance.includes(`| ${name} |`), `${name} is recorded in ASSET-PROVENANCE.md`);
     assert.ok(existsSync(new URL(`../public/eddfa/${name}.optimized.webp`, import.meta.url)), `${name} is in public/eddfa`);
@@ -428,4 +428,25 @@ test("a few marble sections carry the light aluminium film", () => {
   assert.equal(uses, 4, "the guide, the questions, Contact and the products chapter of « Présentation »");
   assert.ok(source("../src/components/film.tsx").includes('export type LoopName = "eden" | "eclat" | "aluminium" | "aluminium-light";'));
   assert.ok(source("../src/app/signature.css").includes(".plate-film { position: absolute; inset: 0; z-index: -2;"));
+});
+
+test("phones get a tall photo of the same bathroom, with the words above it", () => {
+  const media = source("../src/components/media.tsx");
+  assert.ok(media.includes('<source media="(max-width: 640px)" srcSet={phone.srcSet} sizes="100vw" width={1080} height={1910} />'), "phones load the tall photo, computers the wide one");
+  assert.ok(existsSync(new URL("../public/eddfa/hero-eden-phone.optimized.webp", import.meta.url)));
+  assert.ok(source("../ASSET-PROVENANCE.md").includes("| hero-eden-phone |"), "the tall photo is recorded");
+  const globals = source("../src/app/globals.css");
+  assert.ok(globals.includes(".hero { align-items: flex-start; overflow: clip; background: rgb(181 162 146); }") && globals.includes("aspect-ratio: 1080 / 1910;"), "on phones the words sit at the top and the bathroom shows under them");
+});
+
+test("the buttons at the top of the pages look like the Photos page's « Tout / EDEN / ECLAT »", () => {
+  const nav = source("../src/components/range-nav.tsx");
+  assert.ok(nav.includes('className={index === chosen ? "chosen" : undefined}') && nav.includes('style={{ "--count": links.length } as React.CSSProperties}'), "one track, the chosen button in charcoal");
+  assert.ok(nav.includes("top <= line") && nav.includes("hold.current = { index, until: performance.now() + 2500 }; setSpot(index);"), "for parts of a page, the chosen button follows the part on screen, and stays on a tapped one while the page glides");
+  assert.ok(nav.includes('<span ref={pill} className="range-pill" aria-hidden="true" />') && nav.includes("thumb.style.translate = `${(inner.left - outer.left) / scale}px ${(inner.top - outer.top) / scale}px`;"), "the charcoal pill glides to the chosen button, as on the Photos page");
+  const layers = source("../src/app/layers.css");
+  assert.ok(layers.includes(".range-nav[data-pill] a.chosen { background: transparent; }") && layers.includes(".range-pill, .soft-details::details-content"), "the pill takes over from the button's own charcoal, and keeps still for reduced motion");
+  assert.ok(layers.includes(".range-nav ul { display: grid; grid-template-columns: repeat(var(--count), minmax(0, 1fr)); margin: 0; padding: 4px; list-style: none; border: 1px solid var(--line-soft); border-radius: 999px; background: var(--marble-2); }"), "the same track as the Photos page");
+  assert.ok(layers.includes(".range-nav a.chosen { background: var(--graphite); color: var(--brass); }") && layers.includes(".range-nav ul:has(> li:nth-child(4)) { grid-template-columns: repeat(6, minmax(0, 1fr)); border-radius: 28px; }"), "charcoal and brass; two lines on phones beyond three buttons");
+  assert.ok(!layers.includes("data-overflow"), "nothing runs off the screen any more");
 });

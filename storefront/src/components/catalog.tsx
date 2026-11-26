@@ -13,6 +13,7 @@ import { useCatalog } from "./catalog-context";
 import { RangeNav } from "./range-nav";
 import { TechDrawing } from "./tech-drawing";
 import { AddToQuote } from "./basket";
+import { markSeen, SegmentedThumb } from "./motion";
 
 // The two figures a visitor compares first, read from the catalogue: heights, then heat (element power for ECLAT).
 export function quickFacts(product: CatalogProduct) {
@@ -47,7 +48,7 @@ export function ArticleGrid({ locale, items, scale }: { locale: Locale; items: C
   return <>
     {scale && <fieldset className="segmented view-switch" style={{ "--index": view === "photo" ? 0 : 1, "--count": views.length } as React.CSSProperties}>
       <legend className="sr-only">{t.viewLabel}</legend>
-      <div className="segmented-track"><span className="segmented-thumb" aria-hidden="true" />{views.map(([key, label]) => <label key={key} className={view === key ? "active" : undefined}><input type="radio" name={`${id}-view`} value={key} checked={view === key} onChange={() => setView(key)} /><span>{label}</span></label>)}</div>
+      <div className="segmented-track"><SegmentedThumb index={view === "photo" ? 0 : 1} />{views.map(([key, label]) => <label key={key} className={view === key ? "active" : undefined}><input type="radio" name={`${id}-view`} value={key} checked={view === key} onChange={() => setView(key)} /><span>{label}</span></label>)}</div>
     </fieldset>}
     <div className="catalog-grid">{items.map(product => <CatalogCard key={product.id} locale={locale} product={product} level="h3" drawn={view === "scale"} />)}</div>
     {scale && view === "scale" && <p className="specification-note scale-note">{t.drawingNote}</p>}
@@ -94,10 +95,15 @@ export function ProductDetail({ locale, product }: { locale: Locale; product: Ca
   const catalog = useCatalog();
   const family = familyById(product.category);
   const [photo, setPhoto] = useState(0);
+  // Pose to pose: the next photo comes in from the side it is on (the arrows, a swipe or a thumbnail), not in a cut.
+  const [turn, setTurn] = useState(0);
   const [lightbox, setLightbox] = useState<number | null>(null);
   const [variantId, setVariantId] = useState(product.variants[0]?.id ?? "");
   const photos = product.gallery.length;
-  const step = (by: number) => setPhoto(index => (index + by + photos) % photos);
+  const step = (by: number) => { setTurn(by); setPhoto(index => (index + by + photos) % photos); };
+  const showPhoto = (index: number) => { if (index === photo) return; setTurn(index > photo ? 1 : -1); setPhoto(index); };
+  // Frequency of use: the models seen during the visit open their ranges on the quote page.
+  useEffect(() => { markSeen(product.id); }, [product.id]);
   // Swipe between photos on touch screens; a mostly vertical move is left to the page scroll.
   const touch = useRef<{ x: number; y: number } | null>(null);
   const variant = product.variants.find(v => v.id === variantId) ?? product.variants[0];
@@ -108,7 +114,7 @@ export function ProductDetail({ locale, product }: { locale: Locale; product: Ca
     <ChevronRight size={14} className="directional-icon" /><span aria-current="page"><bdi>{product.title[locale]}</bdi></span>
   </nav>;
   const crumbRow = <div className={`crumb-row detail-crumbs${family && models.length > 1 ? " has-aside" : ""}`}>{breadcrumbs}
-    {family && models.length > 1 && <RangeNav tone="light" label={`${t.modelsNav} ${family.name}`} links={models.map(item => ({ href: `/${locale}/produits/${item.handle}`, label: item.title[locale], current: item.id === product.id }))} />}</div>;
+    {family && models.length > 1 && <RangeNav label={`${t.modelsNav} ${family.name}`} links={models.map(item => ({ href: `/${locale}/produits/${item.handle}`, label: item.title[locale], current: item.id === product.id }))} />}</div>;
   if (!variant) return <section className="product-detail section plate"><div className="container">{crumbRow}<h1>{product.title[locale]}</h1><p>{product.description[locale]}</p><QuoteLink locale={locale} query={`?ref=${product.id}`}>{t.quote}</QuoteLink></div></section>;
   // The key values of the chosen version; the full sheet sits in the first tab.
   const chips = [
@@ -166,14 +172,14 @@ export function ProductDetail({ locale, product }: { locale: Locale; product: Ca
                 const box = event.currentTarget.getBoundingClientRect();
                 event.currentTarget.style.setProperty("--zx", `${((event.clientX - box.left) / box.width) * 100}%`);
                 event.currentTarget.style.setProperty("--zy", `${((event.clientY - box.top) / box.height) * 100}%`);
-              }}><Photo src={product.gallery[photo]} alt={product.title[locale]} priority /><span className="zoom-icon"><Expand size={20} /></span></button>
+              }}><span key={photo} className={`stage-slide${turn > 0 ? " from-next" : turn < 0 ? " from-back" : ""}`}><Photo src={product.gallery[photo]} alt={product.title[locale]} priority /></span><span className="zoom-icon"><Expand size={20} /></span></button>
             {photos > 1 && <>
               <button type="button" className="stage-arrow prev" aria-label={t.previous} onClick={() => step(-1)}><ChevronLeft size={20} className="directional-icon" /></button>
               <button type="button" className="stage-arrow next" aria-label={t.next} onClick={() => step(1)}><ChevronRight size={20} className="directional-icon" /></button>
               <span className="stage-count" aria-label={`${t.photo} ${photo + 1} ${t.of} ${photos}`}><bdi dir="ltr" aria-hidden="true">{`${photo + 1} / ${photos}`}</bdi></span>
             </>}
           </div>
-          {photos > 1 && <div className="thumbnails">{product.gallery.map((image, index) => <button key={image} type="button" className={index === photo ? "active" : ""} aria-pressed={index === photo} aria-label={`${t.photo} ${index + 1} ${t.of} ${photos}`} onClick={() => setPhoto(index)}><Photo src={image} alt="" sizes="100px" /></button>)}</div>}
+          {photos > 1 && <div className="thumbnails">{product.gallery.map((image, index) => <button key={image} type="button" className={index === photo ? "active" : ""} aria-pressed={index === photo} aria-label={`${t.photo} ${index + 1} ${t.of} ${photos}`} onClick={() => showPhoto(index)}><Photo src={image} alt="" sizes="100px" /></button>)}</div>}
         </div>
         <div className="product-detail-copy">
           <span className="eyebrow">{family ? family.kind[locale] : t.bundle}</span><h1><bdi>{product.title[locale]}</bdi></h1><p className="detail-pitch">{product.description[locale]}</p>

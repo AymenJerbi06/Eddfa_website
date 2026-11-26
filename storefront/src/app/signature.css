@@ -513,7 +513,7 @@
 @keyframes wind-up-rtl { 0% { translate: 0 0; } 35% { translate: 3px 0; } 100% { translate: -2px 0; } }
 .site-shell :is(.pill-button:not(.light), .text-link):hover .directional-icon { animation: wind-up 0.5s var(--ease) forwards; }
 [dir="rtl"] .site-shell :is(.pill-button:not(.light), .text-link):hover .directional-icon { animation-name: wind-up-rtl; }
-.site-shell :is(.segmented label, .thumbnails button, .timeline-steps button, .soft-details summary, .model-chips a, .range-others a):active { opacity: 0.75; }
+.site-shell :is(.segmented label, .range-nav a, .thumbnails button, .timeline-steps button, .soft-details summary, .model-chips a, .range-others a):active { opacity: 0.75; }
 .site-shell .card-flip:active { scale: 0.94; }
 /* Fitts: small links get a full-height hit area. */
 .language-link { position: relative; }
@@ -985,3 +985,202 @@
    and is a still picture for visitors who ask for less motion (FilmLoop). Home: the guide and the questions; Contact;
    the products chapter of « Présentation ». */
 .plate-film { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; pointer-events: none; -webkit-mask-image: linear-gradient(180deg, transparent, black 12%, black 88%, transparent); mask-image: linear-gradient(180deg, transparent, black 12%, black 88%, transparent); }
+
+/* ------------------------------------------------------------------------------------------------------------------
+   The motion and ease-of-use pass over every page (the user, 26 November 2026: « squash and stretch, anticipation,
+   staging, pose to pose, follow through, slow in and slow out, arcs, secondary action, timing, exaggerated feedback,
+   solid drawing, appeal, Fitts's law and bigger hit areas, Hick's law, Miller's law, the Doherty threshold, Postel's
+   law, Jakob's law, frequency of use »). Each part answers something the visitor does (points, presses, taps, drags,
+   types, scrolls); nothing starts by itself. Visitors who ask for less motion get none of it (the last block). The
+   scripted parts are in components/motion.tsx (the thumbs, the shake, the visit's memory) and form-help.ts.
+   ------------------------------------------------------------------------------------------------------------------ */
+
+/* Slow in, slow out: what travels across the screen and stops on it starts gently and lands gently. */
+.segmented-thumb { transition: inset-inline-start 0.45s var(--glide); }
+.range-pill { transition: translate 0.45s var(--glide), width 0.45s var(--glide), height 0.45s var(--glide); }
+.tab-bar { transition: transform 0.45s var(--glide), width 0.45s var(--glide); }
+.meter-line::after { transition: transform 0.6s var(--glide); }
+.timeline-steps::after { transition: transform 0.6s var(--glide); }
+.details-photo img { transition: scale 0.8s var(--glide), transform-origin 0.8s var(--glide); }
+
+/* Solid drawing: one light, from above. The tracks of the segmented choices are pressed into the plate and their
+   charcoal pill stands on them; the main buttons have a lit top edge and a small shadow that goes when pressed. */
+.segmented-track, .range-nav ul { box-shadow: inset 0 1px 2px rgb(31 33 34 / 7%); }
+.segmented-thumb, .range-pill, .range-nav:not([data-pill]) a.chosen { box-shadow: 0 3px 8px -3px rgb(35 37 38 / 45%), inset 0 1px 0 rgb(255 255 255 / 10%); }
+.pill-button.primary { box-shadow: inset 0 1px 0 rgb(255 255 255 / 9%), 0 2px 4px -1px rgb(35 37 38 / 28%); }
+.pill-button.primary:hover { box-shadow: inset 0 1px 0 rgb(255 255 255 / 9%), var(--heat); }
+.pill-button.primary:active { box-shadow: inset 0 1px 3px rgb(0 0 0 / 24%); }
+
+/* Squash and stretch, follow through: « Devis » takes the added article with a squash, stretches back and settles. */
+@keyframes quote-hit { 0% { scale: 1; } 30% { scale: 1.16 0.86; } 55% { scale: 0.94 1.07; } 78% { scale: 1.03 0.98; } 100% { scale: 1; } }
+.quote-hit { animation: quote-hit 0.6s ease-out; }
+
+/* Anticipation: arrows pull back a hair before they go, toward where they point; the way-up arrow dips when pressed,
+   then the page goes up. */
+@keyframes wind-rise { 0% { translate: 0 0; } 35% { translate: 0 3px; } 100% { translate: 0 -2px; } }
+@media (hover: hover) {
+  :is(.carousel-arrow.next, .stage-arrow.next, .lightbox-controls > button:last-child, .details-card-nav > button:last-child):hover svg { animation: wind-up 0.5s var(--ease) forwards; }
+  :is(.carousel-arrow.prev, .stage-arrow.prev, .lightbox-controls > button:first-child, .details-card-nav > button:first-child):hover svg { animation: wind-up-rtl 0.5s var(--ease) forwards; }
+  [dir="rtl"] :is(.carousel-arrow.next, .stage-arrow.next, .lightbox-controls > button:last-child, .details-card-nav > button:last-child):hover svg { animation-name: wind-up-rtl; }
+  [dir="rtl"] :is(.carousel-arrow.prev, .stage-arrow.prev, .lightbox-controls > button:first-child, .details-card-nav > button:first-child):hover svg { animation-name: wind-up; }
+  .back-to-top:hover svg { animation: wind-rise 0.5s var(--ease) forwards; }
+}
+.back-to-top svg { transition: translate 0.3s var(--spring); }
+.back-to-top:active svg { translate: 0 3px; transition-duration: var(--press); }
+/* The comparison's first sweep starts with a small move the other way, so the eye catches where it goes. */
+@keyframes compare-hint { 0% { --position: 50%; } 10% { --position: 54%; } 40% { --position: 30%; } 72% { --position: 68%; } 100% { --position: 50%; } }
+
+/* Staging: pointing at one article or one range brings it forward; the others step back a little. */
+.catalog-item { transition: opacity 0.35s var(--ease); }
+.range-index a { transition: border-color 0.3s, transform 0.45s var(--ease), box-shadow 0.45s var(--ease), opacity 0.35s var(--ease), scale 0.4s var(--spring); }
+.range-others a { transition: background 0.2s, opacity 0.35s var(--ease), scale 0.4s var(--spring); }
+@media (hover: hover) and (pointer: fine) {
+  .catalog-grid:has(.catalog-item:hover) .catalog-item:not(:hover) { opacity: 0.62; }
+  .range-index:has(a:hover) a:not(:hover), .range-others ul:has(a:hover) a:not(:hover) { opacity: 0.6; }
+}
+/* Staging: an opened model is the one thing in front, the page behind it softly blurred; on phones the open menu is,
+   the page behind it dimmed (a tap there closes it). */
+.quick-overlay { -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+.menu-scrim { display: none; }
+@media (max-width: 921px) {
+  .menu-scrim { position: fixed; inset: 0; z-index: 49; display: block; background: rgb(35 37 38 / 58%); touch-action: none; animation: shade-in 0.25s var(--ease); }
+}
+
+/* Pose to pose, overlapping action: the menus open from their place (the products list drops from its link, the phone
+   menu from the header), their lines following one another; the menu button turns into its cross and back. */
+@keyframes drop-in { from { opacity: 0; translate: 0 -8px; } }
+@keyframes line-in { from { opacity: 0; translate: 0 -6px; } }
+@keyframes icon-turn { from { opacity: 0; rotate: -90deg; scale: 0.6; } }
+.nav-dropdown:not([hidden]) { animation: drop-in 0.22s var(--ease); }
+.nav-dropdown:not([hidden]) > a { animation: line-in 0.3s var(--ease) both; }
+.nav-dropdown:not([hidden]) > a:nth-child(2) { animation-delay: 25ms; }
+.nav-dropdown:not([hidden]) > a:nth-child(3) { animation-delay: 50ms; }
+.nav-dropdown:not([hidden]) > a:nth-child(4) { animation-delay: 75ms; }
+.nav-dropdown:not([hidden]) > a:nth-child(5) { animation-delay: 100ms; }
+.nav-dropdown:not([hidden]) > a:nth-child(6) { animation-delay: 125ms; }
+.mobile-nav:not([hidden]) { animation: drop-in 0.28s var(--ease); }
+.mobile-nav:not([hidden]) > * { animation: line-in 0.34s var(--ease) both; }
+.mobile-nav:not([hidden]) > :nth-child(2) { animation-delay: 30ms; }
+.mobile-nav:not([hidden]) > :nth-child(3) { animation-delay: 60ms; }
+.mobile-nav:not([hidden]) > :nth-child(4) { animation-delay: 90ms; }
+.mobile-nav:not([hidden]) > :nth-child(5) { animation-delay: 120ms; }
+.mobile-nav:not([hidden]) > :nth-child(6) { animation-delay: 150ms; }
+.mobile-nav:not([hidden]) > :nth-child(7) { animation-delay: 180ms; }
+.mobile-nav:not([hidden]) > :nth-child(8) { animation-delay: 210ms; }
+.mobile-menu-button svg { animation: icon-turn 0.3s var(--ease); }
+/* Pose to pose: a photo turned with the arrows, a swipe or a thumbnail comes in from its own side, instead of a cut;
+   in the full-screen view a tap on either side of the photo turns it too. */
+@keyframes photo-from-next { from { opacity: 0.35; translate: 6% 0; } }
+@keyframes photo-from-back { from { opacity: 0.35; translate: -6% 0; } }
+.stage-slide { position: absolute; inset: 0; display: block; }
+.stage-slide.from-next { animation: photo-from-next 0.45s var(--ease); }
+.stage-slide.from-back { animation: photo-from-back 0.45s var(--ease); }
+[dir="rtl"] .stage-slide.from-next { animation-name: photo-from-back; }
+[dir="rtl"] .stage-slide.from-back { animation-name: photo-from-next; }
+.lightbox-half { position: absolute; z-index: 1; top: 0; bottom: 0; width: 34%; padding: 0; border: 0; background: none; cursor: pointer; }
+.lightbox-half.prev { inset-inline-start: 0; }
+.lightbox-half.next { inset-inline-end: 0; }
+.lightbox-half:focus { outline: none; }
+/* An open question's answer comes up as its box opens. */
+.soft-details[open] .soft-details-body { animation: fade-up 0.45s var(--ease) 0.05s both; }
+
+/* Follow through, overlapping action: an opened model's words, versions and buttons arrive one after the other, and a
+   new step of the guide brings its answers a moment after its question. */
+.quick-copy > * { animation: fade-up 0.45s var(--ease) both; }
+.quick-copy > :nth-child(2) { animation-delay: 50ms; }
+.quick-copy > :nth-child(3) { animation-delay: 100ms; }
+.quick-copy > :nth-child(4) { animation-delay: 150ms; }
+.quick-copy > :nth-child(5) { animation-delay: 200ms; }
+.guide-step:is(.from-next, .from-back) :is(.guide-choices, .slider-field, .segmented, .guide-live) { animation: fade-up 0.45s var(--ease) 0.08s both; }
+.guide-step:is(.from-next, .from-back) .guide-result > * { animation: fade-up 0.45s var(--ease) both; }
+.guide-step:is(.from-next, .from-back) .guide-result > :nth-child(2) { animation-delay: 70ms; }
+.guide-step:is(.from-next, .from-back) .guide-result > :nth-child(3) { animation-delay: 140ms; }
+.guide-step:is(.from-next, .from-back) .guide-result > :nth-child(4) { animation-delay: 210ms; }
+.guide-step:is(.from-next, .from-back) .guide-result > :nth-child(5) { animation-delay: 280ms; }
+
+/* Arcs: a point of « Regardez de près » and the model shown over a range's room travel on a curve, not a ruler: across
+   and down each take their own pace. */
+.details-photo .spot { transition: background 0.3s, color 0.3s, scale 0.45s var(--spring), left 0.8s var(--ease), top 0.8s var(--glide); }
+.range-preview { translate: 18px 0; transform: translateY(-47%); transition: opacity 0.4s var(--ease), translate 0.6s var(--ease), transform 0.6s var(--glide); }
+[dir="rtl"] .range-preview { translate: -18px 0; }
+.range-preview.on { translate: 0 0; transform: translateY(-50%); }
+
+/* Secondary action: the field being filled lights its name; a call or mail button rings a little when pointed at; an
+   article's photo comes closer under the pointer, where it points (it opens full screen on a click, as before). */
+.inquiry-form > label, .inquiry-form .form-row > label { transition: color 0.2s; }
+.inquiry-form > label:focus-within, .inquiry-form .form-row > label:focus-within { color: var(--brass-deep); }
+@keyframes ring-tilt { 0%, 100% { rotate: 0deg; } 20% { rotate: -14deg; } 40% { rotate: 11deg; } 60% { rotate: -7deg; } 80% { rotate: 3deg; } }
+@media (hover: hover) {
+  :is(.contact-chip, .rail-button, .mobile-contact a):hover svg { animation: ring-tilt 0.6s var(--ease); }
+}
+@media (hover: hover) and (pointer: fine) {
+  .detail-photo img { transform-origin: var(--zx, 50%) var(--zy, 50%); transition: scale 0.5s var(--ease); }
+  .detail-photo:hover img { scale: 1.12; }
+}
+
+/* Exaggerated feedback: a field the browser refused stays outlined in brass until it is right (with a short shake,
+   form-help.ts); an article added to the quote flashes brass once before its button says so. */
+.inquiry-form :is(input, select, textarea):user-invalid { border-color: var(--brass-deep); box-shadow: 0 0 0 3px rgb(201 169 110 / 22%); }
+@keyframes added-flash { from { border-color: var(--brass); background-color: var(--brass); color: var(--graphite); } }
+.pill-button.primary.added { animation: added-flash 0.9s var(--ease); }
+
+/* Timing: hovering answers quickly; photos and films no longer take a second to come closer. */
+.mosaic .project-tile img { transition: transform 0.6s var(--ease); }
+.range-card-photo .film-loop { transition: transform 0.6s var(--ease); }
+.filmstrip .project-tile { transition: transform 0.55s var(--ease), opacity 0.45s; }
+.catalog-photo img { transition: transform 0.5s var(--ease), opacity 0.45s var(--ease); }
+
+/* Fitts's law, bigger hit areas: small links get an invisible margin of reach (44 px high at least), small buttons grow
+   to a finger's size, and the handle of the comparison and the points on the photo reach further than they show. */
+.text-link { position: relative; }
+.text-link::after { content: ""; position: absolute; inset: calc(50% - 22px) -8px; }
+.social-links a { position: relative; }
+.social-links a::after { content: ""; position: absolute; inset: calc(50% - 22px) -6px; }
+.story-steps button { width: 44px; height: 44px; }
+.guide-answer { min-height: 44px; }
+.model-chips a, .range-card .model-chips a { min-height: 44px; }
+.spot::after, .compare-handle::after { content: ""; position: absolute; inset: -10px; border-radius: 50%; }
+.quote-line .quote-thumb { padding: 0; flex-direction: row; cursor: pointer; }
+
+/* Jakob's law: « you are here » in the header, as on most sites: a brass line under the page's own link, and under its
+   section's link on the pages under it (a range or an article under « Produits »). The quote's steps lead to their
+   part of the page. */
+@media (min-width: 922px) {
+  .desktop-nav .nav-item:not(.nav-quote) .nav-link-row > a { position: relative; }
+  .desktop-nav .nav-item:not(.nav-quote) .nav-link-row > a::after { content: ""; position: absolute; top: calc(50% + 14px); inset-inline: 16px; height: 2px; border-radius: 2px; background: var(--brass); transform: scaleX(0); transition: transform 0.3s var(--ease); }
+  .desktop-nav .nav-item:not(.nav-quote) .nav-link-row > a[aria-current]::after { transform: scaleX(1); }
+}
+@media (min-width: 922px) and (max-width: 1180px) {
+  .desktop-nav .nav-item:not(.nav-quote) .nav-link-row > a::after { inset-inline: 10px; }
+  .desktop-nav .nav-item.has-dropdown:not(.nav-quote) .nav-link-row > a::after { inset-inline-end: 4px; }
+}
+.mobile-nav .nav-item:not(.nav-quote) .nav-link-row > a[aria-current] { color: var(--brass); box-shadow: inset 3px 0 0 var(--brass); }
+[dir="rtl"] .mobile-nav .nav-item:not(.nav-quote) .nav-link-row > a[aria-current] { box-shadow: inset -3px 0 0 var(--brass); }
+.nav-dropdown a[aria-current="page"] { color: var(--brass); }
+.progress-jump { display: inline-flex; align-items: center; gap: inherit; min-height: 44px; padding: 0; border: 0; background: none; color: inherit; font: inherit; white-space: inherit; cursor: pointer; transition: color 0.2s; }
+.progress-jump:hover { color: var(--brass-deep); }
+
+/* Overall appeal: everything that can be pressed answers the same way: it gives under the finger and springs back. */
+.model-chips a { transition: border-color 0.2s, background 0.2s, color 0.2s, scale 0.4s var(--spring); }
+:is(.version-options, .quick-versions) label { transition: border-color 0.25s, background 0.25s, color 0.25s, scale 0.4s var(--spring); }
+.guide-answer { transition: border-color 0.2s, background 0.2s, scale 0.4s var(--spring); }
+.sizing-alternatives a { transition: border-color 0.25s, color 0.25s, scale 0.4s var(--spring); }
+.contact-chip { transition: border-color 0.2s, background 0.2s, color 0.2s, scale 0.4s var(--spring); }
+.stage-arrow { transition: background 0.25s, color 0.25s, scale 0.4s var(--spring); }
+.story-steps button { transition: background 0.3s, border-color 0.3s, color 0.3s, scale 0.4s var(--spring); }
+.thumbnails button { transition: border-color 0.25s, scale 0.4s var(--spring); }
+:is(.quick-close, .quantity-stepper .icon-button, .details-card-nav .icon-button, .lightbox-controls .icon-button, .gallery-close) { transition: background 0.2s, color 0.2s, scale 0.4s var(--spring); }
+:is(.model-chips a, .version-options label, .quick-versions label, .guide-answer, .sizing-alternatives a, .contact-chip, .range-others a, .range-index a, .stage-arrow, .story-steps button, .thumbnails button, .quick-close, .quantity-stepper .icon-button, .details-card-nav .icon-button, .lightbox-controls .icon-button, .gallery-close, .progress-jump):active { scale: 0.95; transition: scale var(--press); }
+.spot:active { scale: 0.94; }
+
+/* Doherty threshold: a picture still on its way shows the soft moving light of a loading card, here too. */
+:is(.quick-photo, .thumbnails button) { background-image: linear-gradient(100deg, rgb(255 255 255 / 0%) 40%, rgb(255 255 255 / 55%) 50%, rgb(255 255 255 / 0%) 60%); background-size: 220% 100%; background-repeat: no-repeat; animation: shimmer 1.3s ease-in-out 2; }
+
+/* Less motion: none of the above moves; the pass's other changes (reach, order, memory, tidy fields) stay. */
+@media (prefers-reduced-motion: reduce) {
+  .quote-hit, .back-to-top svg, .nav-dropdown:not([hidden]), .nav-dropdown:not([hidden]) > a, .mobile-nav:not([hidden]), .mobile-nav:not([hidden]) > *, .mobile-menu-button svg, .stage-slide, .soft-details[open] .soft-details-body, .quick-copy > *, .guide-step :is(.guide-choices, .slider-field, .segmented, .guide-live), .guide-step .guide-result > *, .menu-scrim, .pill-button.primary.added, :is(.quick-photo, .thumbnails button) { animation: none; }
+  :is(.carousel-arrow, .stage-arrow, .lightbox-controls > button, .details-card-nav > button, .contact-chip, .rail-button, .mobile-contact a):hover svg { animation: none; }
+  .segmented-thumb, .range-pill, .tab-bar, .meter-line::after, .timeline-steps::after, .details-photo img, .details-photo .spot, .range-preview, .catalog-item, .range-index a, .range-others a, .back-to-top svg, .detail-photo img, .desktop-nav .nav-link-row > a::after, .model-chips a, .contact-chip, .stage-arrow, .story-steps button, .thumbnails button { transition: none; }
+  :is(.model-chips a, .version-options label, .quick-versions label, .guide-answer, .sizing-alternatives a, .contact-chip, .range-others a, .range-index a, .stage-arrow, .story-steps button, .thumbnails button, .quick-close, .quantity-stepper .icon-button, .details-card-nav .icon-button, .lightbox-controls .icon-button, .gallery-close, .progress-jump, .spot):active { scale: none; }
+  .back-to-top:active svg, .detail-photo:hover img { translate: none; scale: none; }
+}

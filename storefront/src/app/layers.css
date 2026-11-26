@@ -40,6 +40,8 @@
   --radius: 24px;
   --ease: cubic-bezier(0.22, 0.68, 0.2, 1);
   --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Slow in, slow out: for what travels across the screen and stops on it (the motion pass, 26 November 2026). */
+  --glide: cubic-bezier(0.65, 0, 0.35, 1);
   --press: 0.09s;
   --soft: 0 1px 2px rgb(35 37 38 / 5%), 0 18px 40px -30px rgb(35 37 38 / 40%);
   --heat: 0 0 0 4px rgb(201 169 110 / 40%);
@@ -50,7 +52,9 @@
 body { background: var(--marble); color: var(--ink); }
 /* The page is charcoal; a plate is a section to read or use, a band a section to watch. Plates never touch: a seam of
    charcoal always shows between two of them. */
-.site-shell main { background: var(--graphite); }
+/* flow-root keeps the first and last plates' margins inside the charcoal (they used to fall through it and show a line
+   of marble under the header, on the article pages). */
+.site-shell main { display: flow-root; background: var(--graphite); }
 .plate { position: relative; isolation: isolate; overflow: clip; margin-inline: var(--inset); border-radius: var(--plate-radius); background: var(--marble); color: var(--ink); }
 main > :not(.band) + .plate { margin-top: var(--inset); }
 main > .plate:last-child { margin-bottom: var(--inset); }
@@ -176,17 +180,19 @@ main > .plate:first-child { margin-top: calc(80px + var(--inset)); }
 .page-heading { max-width: 760px; margin-bottom: 40px; }
 .page-heading p { max-width: 640px; font-size: 17px; }
 
-/* A chip track: the five ranges, the models of a range, the chapters of the presentation page. It scrolls
-   sideways on phones and fades at its edges when it does. */
-.range-nav { max-width: 100%; }
-.range-nav ul { display: inline-flex; gap: 4px; max-width: 100%; margin: 0; padding: 4px; list-style: none; border: 1px solid var(--line-soft); border-radius: 999px; background: var(--marble-2); overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
-.range-nav ul::-webkit-scrollbar { display: none; }
-.range-nav li { flex-shrink: 0; }
-.range-nav a { display: flex; align-items: center; min-height: 40px; padding: 8px 18px; border-radius: 999px; color: var(--ink); font-size: 14px; font-weight: 600; white-space: nowrap; transition: background 0.3s var(--ease), color 0.3s; }
-.range-nav a:hover { background: var(--white); }
-.range-nav a[aria-current="page"] { background: var(--graphite); color: var(--brass); }
-.range-nav a:focus-visible { outline: 3px solid var(--brass); outline-offset: -3px; }
-.range-nav[data-overflow="true"] ul { -webkit-mask-image: linear-gradient(90deg, transparent, black 22px, black calc(100% - 22px), transparent); mask-image: linear-gradient(90deg, transparent, black 22px, black calc(100% - 22px), transparent); }
+/* The buttons at the top of a page's first plate (the five ranges, the models of a range, the chapters of
+   « Présentation »), like the Photos page's « Tout / EDEN / ECLAT » (the user, 26 November 2026): one track, the buttons
+   side by side and the same width, the chosen one on a charcoal pill with brass words; the pill glides to a new choice
+   as the Photos one does (components/range-nav.tsx places it). Until it is placed, the chosen button is charcoal. */
+.range-nav { position: relative; width: 100%; max-width: min(100%, calc(var(--count) * 150px)); }
+.range-nav ul { display: grid; grid-template-columns: repeat(var(--count), minmax(0, 1fr)); margin: 0; padding: 4px; list-style: none; border: 1px solid var(--line-soft); border-radius: 999px; background: var(--marble-2); }
+.range-pill { position: absolute; top: 0; left: 0; z-index: 0; border-radius: 999px; background: var(--graphite); visibility: hidden; pointer-events: none; transition: translate 0.45s var(--ease), width 0.45s var(--ease), height 0.45s var(--ease); }
+.range-nav[data-pill] .range-pill { visibility: visible; }
+.range-nav a { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 6px 12px; border-radius: 999px; color: var(--ink); font-size: 14px; font-weight: 600; line-height: 1.3; text-align: center; transition: background-color 0.3s var(--ease), color 0.3s; }
+.range-nav a.chosen { background: var(--graphite); color: var(--brass); }
+.range-nav[data-pill] a.chosen { background: transparent; }
+.range-nav a:focus-visible { outline: 3px solid var(--brass); outline-offset: 2px; }
+.crumb-row .range-nav { width: min(100%, calc(var(--count) * 150px)); }
 
 /* Article cards: a tall photo, then the name with its heights and heat; the whole card is one target. */
 .catalog-grid { gap: 40px 24px; }
@@ -356,12 +362,13 @@ main > .plate:first-child { margin-top: calc(80px + var(--inset)); }
   .page-banner .title { font-size: clamp(34px, 8vw + 6px, 44px); }
   .page-banner .crumb-row { padding-bottom: 18px; }
   .crumb-row { gap: 4px; padding-block: 10px 6px; }
-  .crumb-row .range-nav { width: 100%; }
-  .range-nav a { min-height: 38px; padding: 7px 13px; font-size: 13px; }
-  /* On a phone the chips of a page's track wrap onto a second line rather than hide past the edge. */
-  .page-track .range-nav ul { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; border: 0; background: none; overflow: visible; -webkit-mask-image: none; mask-image: none; }
-  .page-track .range-nav a { border: 1px solid var(--line-soft); background: var(--marble-2); }
-  .page-track .range-nav a[aria-current="page"] { border-color: var(--graphite); background: var(--graphite); }
+  .range-nav, .crumb-row .range-nav { width: 100%; max-width: none; }
+  .range-nav a { padding-inline: 6px; font-size: 13px; }
+  /* More than three buttons: two lines, three on the first, the rest sharing the second. */
+  .range-nav ul:has(> li:nth-child(4)) { grid-template-columns: repeat(6, minmax(0, 1fr)); border-radius: 28px; }
+  .range-nav ul:has(> li:nth-child(4)) > li { grid-column: span 2; }
+  .range-nav ul:has(> li:nth-child(4)) > li:nth-child(3n+1):nth-last-child(2), .range-nav ul:has(> li:nth-child(4)) > li:nth-child(3n+2):last-child { grid-column: span 3; }
+  .range-nav ul:has(> li:nth-child(4)) > li:nth-child(3n+1):last-child { grid-column: 1 / -1; }
   .catalog-grid { gap: 30px 14px; }
   .catalog-item-caption :is(h2, h3) { font-size: 17px; }
   .catalog-photo { aspect-ratio: 0.8; }
@@ -387,5 +394,5 @@ main > .plate:first-child { margin-top: calc(80px + var(--inset)); }
   .route-progress { transform: scaleX(0.94); }
   .catalog-item:hover .catalog-photo img, .pill-button .directional-icon, .text-link .directional-icon { transform: none; transition: none; }
   .pill-button:not(.light):active, .rail-button:active, .back-to-top:active, .header-quote:active { scale: none; }
-  .segmented-thumb, .soft-details::details-content, .read-more::details-content { transition: none; }
+  .segmented-thumb, .range-pill, .soft-details::details-content, .read-more::details-content { transition: none; }
 }

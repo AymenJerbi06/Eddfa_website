@@ -41,6 +41,12 @@ export function recommend(products: CatalogProduct[], basis: SizingBasis, power:
 }
 
 /** Short decimal display: "2,6" in French, "2.6" in Arabic (the site writes Latin digits in both). */
+// A whole number with its thousands set apart by a thin space (Miller's law: « 1 248 W » reads in two chunks, « 1248 W »
+// in four digits). Latin digits on both sides of the site, as everywhere else in the figures.
+export function formatWhole(value: number) {
+  return new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0, useGrouping: true }).format(Math.round(value));
+}
+
 export function formatDecimal(value: number, locale: Locale, digits = 1) {
   const factor = 10 ** digits;
   const text = String(Math.round(value * factor) / factor);

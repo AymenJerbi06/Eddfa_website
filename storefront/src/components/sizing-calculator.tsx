@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useEffect, useId, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { messages, type Locale, type ProductFamily, type ProductVariant } from "@/lib/content";
-import { formatDecimal, insulationCoefficients, insulationLevels, recommend, requiredPower, sizingRanges, type Insulation } from "@/lib/sizing";
+import { formatDecimal, formatWhole, insulationCoefficients, insulationLevels, recommend, requiredPower, sizingRanges, type Insulation } from "@/lib/sizing";
 import { useCatalog } from "./catalog-context";
-import { useTweenedNumber } from "./motion";
+import { SegmentedThumb, useTweenedNumber } from "./motion";
 import { Photo } from "./media";
 import { AddToQuote } from "./basket";
 
@@ -65,7 +65,7 @@ export function SizingCalculator({ locale, family }: { locale: Locale; family: P
         </div>
         <fieldset className="segmented" style={{ "--index": insulationLevels.indexOf(insulation), "--count": insulationLevels.length } as React.CSSProperties}>
           <legend>{t.insulation}</legend>
-          <div className="segmented-track"><span className="segmented-thumb" aria-hidden="true" />{insulationLevels.map(level => <label key={level} className={insulation === level ? "active" : undefined}><input type="radio" name={`${id}-insulation`} value={level} checked={insulation === level} onChange={() => setInsulation(level)} /><span>{t.insulationLevels[level]}</span></label>)}</div>
+          <div className="segmented-track"><SegmentedThumb index={insulationLevels.indexOf(insulation)} />{insulationLevels.map(level => <label key={level} className={insulation === level ? "active" : undefined}><input type="radio" name={`${id}-insulation`} value={level} checked={insulation === level} onChange={() => setInsulation(level)} /><span>{t.insulationLevels[level]}</span></label>)}</div>
           <p className="segmented-hint">{t.insulationHints[insulation]}</p>
         </fieldset>
         <Link className="text-link" href={other.href}><span>{other.label}</span><ChevronRight size={16} className="directional-icon" /></Link>
@@ -74,7 +74,7 @@ export function SizingCalculator({ locale, family }: { locale: Locale; family: P
         <div className="sizing-result">
           <div className="sizing-head"><div>
             <span className="eyebrow">{t.requiredPower}</span>
-            <strong className="sizing-power" dir="ltr">≈ {Math.round(shownPower)} W</strong>
+            <strong className="sizing-power" dir="ltr">≈ {formatWhole(shownPower)} W</strong>
             <span className="sizing-volume">{t.volume}{locale === "fr" ? " : " : ": "}<bdi dir="ltr">{formatDecimal(surface * ceiling, locale)} m³</bdi></span>
           </div>{best && <WarmRadiators key={`${best.variant.id}-${best.units}`} units={best.units} load={power / (best.output * best.units)} />}</div>
           {best ? <div className="sizing-pick" key={`${best.variant.id}-${best.units}`}>
@@ -88,7 +88,7 @@ export function SizingCalculator({ locale, family }: { locale: Locale; family: P
         </div>
         <div className="sizing-formula">
           <span className="eyebrow">{t.method}</span>
-          <p dir="ltr">{formatDecimal(surface, locale)} m² × {formatDecimal(ceiling, locale, 2)} m × {insulationCoefficients[insulation]} W/m³ = {power} W</p>
+          <p dir="ltr">{formatDecimal(surface, locale)} m² × {formatDecimal(ceiling, locale, 2)} m × {insulationCoefficients[insulation]} W/m³ = {formatWhole(power)} W</p>
           <details className="soft-details">
             <summary>{t.howCalculated}</summary>
             <div className="soft-details-body">

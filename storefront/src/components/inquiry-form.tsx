@@ -2,11 +2,12 @@
 
 import { useId, useState, type FormEvent } from "react";
 import { Download, Mail, MessageCircle, RotateCcw } from "lucide-react";
-import { company, governorates, messages, whatsappHref, type Locale } from "@/lib/content";
+import { company, families, governorates, messages, whatsappHref, type Locale } from "@/lib/content";
 import { RadiatorMark } from "./radiator-mark";
 import { useCatalog } from "./catalog-context";
 import { normalizeTunisianPhone } from "@/lib/inquiry";
 import { variantLabel, variantSummary } from "@/lib/products";
+import { tidyEmail, tidyName, tidyPhone, useShakeOnInvalid } from "./form-help";
 
 export function InquiryForm({ locale, initialProduct = "", initialVariant = "" }: { locale: Locale; initialProduct?: string; initialVariant?: string }) {
   const products = useCatalog();
@@ -16,6 +17,7 @@ export function InquiryForm({ locale, initialProduct = "", initialVariant = "" }
   const [productId, setProductId] = useState(initialProduct);
   const [variantId, setVariantId] = useState(initialVariant);
   const currentProduct = products.find(p => p.id === productId);
+  const shakeRef = useShakeOnInvalid();
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -54,15 +56,20 @@ export function InquiryForm({ locale, initialProduct = "", initialVariant = "" }
     </div>
     <button className="text-button" type="button" onClick={() => setDraft(null)}><RotateCcw size={15} />{t.another}</button>
   </div>;
-  return <form className="inquiry-form" onSubmit={submit}>
+  return <form ref={shakeRef} className="inquiry-form" onSubmit={submit}>
     <div className="form-row">
-      <label htmlFor={`${id}-name`}>{t.name}<input id={`${id}-name`} name="name" autoComplete="name" required maxLength={100} onBlur={e => { e.currentTarget.value = e.currentTarget.value.replace(/\s+/g, " ").trim(); }} /></label>
-      <label htmlFor={`${id}-phone`}>{t.phone}<input id={`${id}-phone`} name="phone" autoComplete="tel" type="tel" inputMode="tel" dir="ltr" required maxLength={24} placeholder={t.phoneHint} onInput={e => e.currentTarget.setCustomValidity("")} /></label>
+      <label htmlFor={`${id}-name`}>{t.name}<input id={`${id}-name`} name="name" autoComplete="name" required maxLength={100} onBlur={e => tidyName(e.currentTarget)} /></label>
+      <label htmlFor={`${id}-phone`}>{t.phone}<input id={`${id}-phone`} name="phone" autoComplete="tel" type="tel" inputMode="tel" dir="ltr" required maxLength={24} placeholder={t.phoneHint} onInput={e => e.currentTarget.setCustomValidity("")} onBlur={e => tidyPhone(e.currentTarget)} /></label>
     </div>
-    <label htmlFor={`${id}-email`}>{t.email}<input id={`${id}-email`} name="email" autoComplete="email" type="email" dir="ltr" maxLength={254} onBlur={e => { e.currentTarget.value = e.currentTarget.value.trim().toLowerCase(); }} /></label>
+    <label htmlFor={`${id}-email`}>{t.email}<input id={`${id}-email`} name="email" autoComplete="email" type="email" dir="ltr" maxLength={254} onBlur={e => tidyEmail(e.currentTarget)} /></label>
     <div className="form-row">
       <label htmlFor={`${id}-region`}>{t.region}<select id={`${id}-region`} name="region" required defaultValue=""><option value="" disabled>{t.chooseRegion}</option>{governorates.map(g => <option key={g.fr} value={g.fr}>{g[locale]}</option>)}</select></label>
-      <label htmlFor={`${id}-product`}>{t.product}<select id={`${id}-product`} name="product" value={productId} onChange={e => { setProductId(e.target.value); setVariantId(""); }}><option value="">{t.chooseProduct}</option>{products.map(p => <option key={p.id} value={p.id}>{p.title[locale]}</option>)}</select></label>
+      {/* Hick's law: the models are grouped under their range, so the visitor looks through one range, not the whole list. */}
+      <label htmlFor={`${id}-product`}>{t.product}<select id={`${id}-product`} name="product" value={productId} onChange={e => { setProductId(e.target.value); setVariantId(""); }}><option value="">{t.chooseProduct}</option>
+        {families.map(family => { const items = products.filter(p => p.category === family.id); return items.length ? <optgroup key={family.id} label={`${family.name} · ${family.kind[locale]}`}>{items.map(p => <option key={p.id} value={p.id}>{p.title[locale]}</option>)}</optgroup> : null; })}
+        {products.some(p => p.category === "bundle") && <optgroup label={t.bundle}>{products.filter(p => p.category === "bundle").map(p => <option key={p.id} value={p.id}>{p.title[locale]}</option>)}</optgroup>}
+        {products.filter(p => p.category !== "bundle" && !families.some(family => family.id === p.category)).map(p => <option key={p.id} value={p.id}>{p.title[locale]}</option>)}
+      </select></label>
     </div>
     {currentProduct && <label htmlFor={`${id}-variant`}>{t.variant}<select id={`${id}-variant`} name="variant" dir="ltr" value={variantId} onChange={e => setVariantId(e.target.value)}><option value="">{t.chooseVariant}</option>{currentProduct.variants.map(v => <option key={v.id} value={v.id}>{variantLabel(v)}</option>)}</select></label>}
     <label htmlFor={`${id}-message`}>{t.message}<textarea id={`${id}-message`} name="message" rows={4} required minLength={5} maxLength={2000} /></label>

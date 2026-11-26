@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Pencil, RotateCcw } from "lucide-react";
 import { familyById, messages, type Locale, type ProductVariant } from "@/lib/content";
-import { formatDecimal, insulationLevels, recommend, requiredPower, sizingRanges, type Insulation } from "@/lib/sizing";
+import { formatDecimal, formatWhole, insulationLevels, recommend, requiredPower, sizingRanges, type Insulation } from "@/lib/sizing";
 import { useCatalog } from "./catalog-context";
-import { useTweenedNumber } from "./motion";
+import { keep, remember, SegmentedThumb, shake, useTweenedNumber } from "./motion";
 import { Photo } from "./media";
 import { Lines } from "./lines";
 import { RadiatorMark, markBars } from "./radiator-mark";
@@ -32,6 +32,7 @@ export function HomeGuide({ locale }: { locale: Locale }) {
   const id = useId();
   const catalog = useCatalog();
   const card = useRef<HTMLDivElement>(null);
+  const choices = useRef<HTMLDivElement>(null);
   const [moved, setMoved] = useState(false);
   const [step, setStep] = useState(0);
   const [back, setBack] = useState(false);
@@ -49,10 +50,14 @@ export function HomeGuide({ locale }: { locale: Locale }) {
       if (typeof saved.ceiling === "number" && saved.ceiling >= sizingRanges.ceiling.min && saved.ceiling <= sizingRanges.ceiling.max) setCeiling(saved.ceiling);
       if (saved.insulation && insulationLevels.includes(saved.insulation)) setInsulation(saved.insulation);
     } catch { /* private mode or a damaged entry: the defaults stay */ }
+    // Frequency of use: the visitor's answer about central heating is kept for the visit too, already ticked.
+    const heating = remember<string | null>("eddfa-heating", null);
+    if (heating === "eden" || heating === "eclat") setRange(heating);
   }, []);
   useEffect(() => {
     try { window.sessionStorage.setItem("eddfa-room", JSON.stringify({ surface, ceiling, insulation })); } catch { /* storage unavailable */ }
   }, [surface, ceiling, insulation]);
+  useEffect(() => { if (range) keep("eddfa-heating", range); }, [range]);
 
   // Each new step starts where the visitor is looking: its question takes the focus, and if the card's top has gone
   // above the screen (or the answer is taller than what is left of it), the page brings the card's top back under the
@@ -79,7 +84,8 @@ export function HomeGuide({ locale }: { locale: Locale }) {
     setStep(Math.max(0, Math.min(RESULT, target)));
   };
   const next = () => {
-    if (step === 0 && !range) { setMissing(true); return; }
+    // Exaggerated feedback: without an answer, the two answers give a short « no » shake under the message.
+    if (step === 0 && !range) { setMissing(true); shake(choices.current); return; }
     go(step + 1);
   };
 
@@ -96,7 +102,7 @@ export function HomeGuide({ locale }: { locale: Locale }) {
     ...(step > 2 ? [[2, `${t.guideSteps[2]}${locale === "fr" ? " : " : ": "}${t.insulationLevels[insulation]}`] as [number, string]] : []),
   ];
   const progress = step < RESULT ? `${t.guideProgress.replace("{n}", String(step + 1))} · ${t.guideSteps[step]}` : t.guideResult;
-  const powerLine = <p className="guide-live"><span>{t.requiredPower}</span><strong dir="ltr">≈ {Math.round(shownPower)} W</strong></p>;
+  const powerLine = <p className="guide-live"><span>{t.requiredPower}</span><strong dir="ltr">≈ {formatWhole(shownPower)} W</strong></p>;
 
   return <section id="trouver" className="section plate guide-section has-film"><FilmLoop name="aluminium-light" wide className="plate-film" /><Emblem side="start" /><div className="container">
     <div className="guide-layout">
@@ -113,7 +119,7 @@ export function HomeGuide({ locale }: { locale: Locale }) {
       <form key={step} className={`guide-step${moved ? (back ? " from-back" : " from-next") : ""}`} onSubmit={event => { event.preventDefault(); next(); }}>
         {step === 0 && <fieldset className="guide-q" aria-describedby={missing ? `${id}-missing` : undefined}>
           <legend><span data-step-focus tabIndex={-1}>{t.guideHeating}</span></legend>
-          <div className="guide-choices">{ranges.map(key => <label key={key} className={range === key ? "active" : undefined}>
+          <div ref={choices} className="guide-choices">{ranges.map(key => <label key={key} className={range === key ? "active" : undefined}>
             <input type="radio" name={`${id}-heating`} value={key} checked={range === key} onChange={() => { setRange(key); setMissing(false); }} />
             <strong>{key === "eden" ? t.guideYes : t.guideNo}</strong><small><bdi>{key === "eden" ? t.guideYesHint : t.guideNoHint}</bdi></small>
           </label>)}</div>
@@ -130,7 +136,7 @@ export function HomeGuide({ locale }: { locale: Locale }) {
         {step === 2 && <fieldset className="guide-q">
           <legend><span data-step-focus tabIndex={-1}>{t.guideInsulation}</span></legend>
           <div className="segmented" style={{ "--index": insulationLevels.indexOf(insulation), "--count": insulationLevels.length } as React.CSSProperties}>
-            <div className="segmented-track"><span className="segmented-thumb" aria-hidden="true" />{insulationLevels.map(level => <label key={level} className={insulation === level ? "active" : undefined}><input type="radio" name={`${id}-insulation`} value={level} checked={insulation === level} onChange={() => setInsulation(level)} /><span>{t.insulationLevels[level]}</span></label>)}</div>
+            <div className="segmented-track"><SegmentedThumb index={insulationLevels.indexOf(insulation)} />{insulationLevels.map(level => <label key={level} className={insulation === level ? "active" : undefined}><input type="radio" name={`${id}-insulation`} value={level} checked={insulation === level} onChange={() => setInsulation(level)} /><span>{t.insulationLevels[level]}</span></label>)}</div>
             <p className="segmented-hint">{t.insulationHints[insulation]}</p>
           </div>
           {powerLine}
@@ -138,7 +144,7 @@ export function HomeGuide({ locale }: { locale: Locale }) {
         {step === RESULT && <div className="guide-result">
           {family && best ? <>
             <div className="guide-power">
-              <div><span className="result-label">{t.requiredPower}</span><strong dir="ltr" data-step-focus tabIndex={-1}>≈ {Math.round(shownPower)} W</strong></div>
+              <div><span className="result-label">{t.requiredPower}</span><strong dir="ltr" data-step-focus tabIndex={-1}>≈ {formatWhole(shownPower)} W</strong></div>
               <RadiatorMark key={`${best.variant.id}-${best.units}`} warm={warm} className="result-mark" />
             </div>
             <div className="guide-pick">

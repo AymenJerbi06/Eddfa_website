@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Asterisk, CheckCircle2, ChevronDown, ChevronRight, FileText, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { asset, company, families, messages, pageContentId, whatsappHref, type CatalogProduct, type Locale, type ProductFamily } from "@/lib/content";
 import type { QuoteQuery } from "@/lib/quote";
-import { Photo } from "./media";
+import { HeroPhoto, Photo } from "./media";
 import { PillLink, QuoteLink } from "./site-shell";
 import { ProjectCarousel, GalleryGrid } from "./galleries";
 import { ArticleGrid, CatalogCard } from "./catalog";
@@ -44,7 +44,7 @@ function PageBanner({ locale, title, label, film = "aluminium", trail = [] }: { 
 
 // A page's chip track (the five ranges, or the chapters of « Présentation »), first on the plate under the band.
 function PageTrack({ label, links }: { label: string; links: RangeLink[] }) {
-  return <div className="page-track"><RangeNav tone="light" label={label} links={links} /></div>;
+  return <div className="page-track"><RangeNav label={label} links={links} /></div>;
 }
 
 const teamAlt = (locale: Locale) => locale === "fr" ? "L’équipe EDDFA devant son véhicule à Sfax" : "فريق EDDFA أمام سيارته في صفاقس";
@@ -99,7 +99,7 @@ export function CallToAction({ locale }: { locale: Locale }) {
 export function HomePage({ locale, products }: { locale: Locale; products: CatalogProduct[] }) {
   const t = messages[locale];
   return <>
-    <section className="hero"><Photo src={asset("hero-eden")} alt="" priority sizes="100vw" className="hero-poster" /><div className="hero-shade" /><div className="container hero-content"><h1><span className="hero-brand">EDDFA</span>{t.heroTitle}</h1><p>{t.heroText}</p><div className="hero-actions"><Link href={`/${locale}/contact`} className="pill-button light">{t.contact}</Link><Link href={`/${locale}/produits`} className="pill-button light hero-products">{t.heroProducts}</Link></div></div><HeroNext label={t.what} target="about-eddfa" /></section>
+    <section className="hero"><HeroPhoto wide={asset("hero-eden")} tall={asset("hero-eden-phone")} className="hero-poster" /><div className="hero-shade" /><div className="container hero-content"><h1><span className="hero-brand">EDDFA</span>{t.heroTitle}</h1><p>{t.heroText}</p><div className="hero-actions"><Link href={`/${locale}/contact`} className="pill-button light">{t.contact}</Link><Link href={`/${locale}/produits`} className="pill-button light hero-products">{t.heroProducts}</Link></div></div><HeroNext label={t.what} target="about-eddfa" /></section>
     <AboutSection locale={locale} />
     <ScrollStory locale={locale} />
     <HomeGuide locale={locale} />

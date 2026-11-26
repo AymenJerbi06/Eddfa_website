@@ -49,11 +49,14 @@ function flyToQuote(from: HTMLElement) {
   token.className = "quote-token";
   token.setAttribute("aria-hidden", "true");
   document.body.appendChild(token);
+  // Anticipation, squash and stretch, arcs: the token sinks and squashes a hair before it leaves, stretches as it
+  // rises on its arc, and lands small on the button, which squashes and springs back (quote-hit in signature.css).
   const flight = token.animate([
     { transform: `translate(${x0}px, ${y0}px) scale(1)`, opacity: 1 },
-    { transform: `translate(${(x0 + x1) / 2}px, ${Math.min(y0, y1) - lift}px) scale(0.9)`, opacity: 1, offset: 0.45 },
+    { transform: `translate(${x0}px, ${y0 + 5}px) scale(1.18, 0.82)`, opacity: 1, offset: 0.12 },
+    { transform: `translate(${(x0 + x1) / 2}px, ${Math.min(y0, y1) - lift}px) scale(0.9, 1.1)`, opacity: 1, offset: 0.5 },
     { transform: `translate(${x1}px, ${y1}px) scale(0.45)`, opacity: 0.85 },
-  ], { duration: 760, easing: "cubic-bezier(0.45, 0, 0.25, 1)" });
+  ], { duration: 820, easing: "cubic-bezier(0.45, 0, 0.25, 1)" });
   flight.onfinish = () => {
     token.remove();
     target.classList.remove("quote-hit");

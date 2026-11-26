@@ -36,18 +36,32 @@ function Navigation({ locale, pathname, mobile = false, onNavigate }: { locale: 
   const t = messages[locale];
   const [productsOpen, setProductsOpen] = useState(false);
   const toggle = useRef<HTMLButtonElement>(null);
+  // Forgiving (Fitts, Jakob): the products menu waits a moment before closing, so a pointer that slips out on its way
+  // down to a range does not lose it.
+  const closing = useRef(0);
+  useEffect(() => () => window.clearTimeout(closing.current), []);
   const dropdownId = `products-${locale}-${mobile ? "mobile" : "desktop"}`;
   return <>
-    {t.nav.map((label, index) => <div key={navPaths[index]} className={`nav-item${index === 2 ? " has-dropdown" : ""}${index === quoteIndex ? " nav-quote" : ""}`}
-      onMouseEnter={() => { if (index === 2 && !mobile) setProductsOpen(true); }}
-      onMouseLeave={event => { if (!event.currentTarget.contains(document.activeElement)) setProductsOpen(false); }}
+    {t.nav.map((label, index) => {
+      // « You are here » (Jakob's law): the page's own link, and its section's link on the pages under it (a range or
+      // an article under « Produits »).
+      const here = pathname === `/${locale}${navPaths[index]}`;
+      const within = index > 0 && !here && pathname.startsWith(`/${locale}${navPaths[index]}/`);
+      return <div key={navPaths[index]} className={`nav-item${index === 2 ? " has-dropdown" : ""}${index === quoteIndex ? " nav-quote" : ""}`}
+      onMouseEnter={() => { if (index === 2 && !mobile) { window.clearTimeout(closing.current); setProductsOpen(true); } }}
+      onMouseLeave={event => {
+        if (index !== 2 || event.currentTarget.contains(document.activeElement)) return;
+        window.clearTimeout(closing.current);
+        closing.current = window.setTimeout(() => setProductsOpen(false), 180);
+      }}
       onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setProductsOpen(false); }}
       onKeyDown={event => { if (index === 2 && event.key === "Escape" && productsOpen) { event.preventDefault(); event.stopPropagation(); setProductsOpen(false); toggle.current?.focus(); } }}>
-      <div className="nav-link-row"><Link href={navigationHref(locale, navPaths[index])} onClick={onNavigate} aria-current={pathname === `/${locale}${navPaths[index]}` ? "page" : undefined}>{label}{index === quoteIndex && <BasketCount label={t.basketLabel} />}</Link>
+      <div className="nav-link-row"><Link href={navigationHref(locale, navPaths[index])} onClick={onNavigate} aria-current={here ? "page" : within ? "true" : undefined}>{label}{index === quoteIndex && <BasketCount label={t.basketLabel} />}</Link>
         {index === 2 && <button ref={toggle} type="button" className="nav-submenu-toggle" aria-label={locale === "ar" ? "قائمة المنتجات" : "Liste des produits"} aria-expanded={productsOpen} aria-controls={dropdownId} onClick={() => setProductsOpen(open => mobile ? !open : true)}><ChevronDown size={14} /></button>}
       </div>
-      {index === 2 && <div id={dropdownId} className="nav-dropdown" hidden={!productsOpen}>{families.map(family => <Link key={family.id} href={`/${locale}/produits/${family.id}`} onClick={onNavigate}><bdi>{family.name}</bdi><small>{family.kind[locale]}</small></Link>)}<Link className="nav-dropdown-tool" href={`/${locale}/produits/eden#choisir`} onClick={onNavigate}>{t.sizingNav}<small>{t.sizingNavHint}</small></Link></div>}
-    </div>)}
+      {index === 2 && <div id={dropdownId} className="nav-dropdown" hidden={!productsOpen}>{families.map(family => <Link key={family.id} href={`/${locale}/produits/${family.id}`} onClick={onNavigate} aria-current={pathname === `/${locale}/produits/${family.id}` ? "page" : undefined}><bdi>{family.name}</bdi><small>{family.kind[locale]}</small></Link>)}<Link className="nav-dropdown-tool" href={`/${locale}/produits/eden#choisir`} onClick={onNavigate}>{t.sizingNav}<small>{t.sizingNavHint}</small></Link></div>}
+    </div>;
+    })}
     <Link className="language-link" href={switchLocalePath(pathname, locale === "fr" ? "ar" : "fr")} onClick={onNavigate} hrefLang={locale === "fr" ? "ar" : "fr"}><Globe2 size={15} />{t.language}</Link>
   </>;
 }
@@ -112,6 +126,13 @@ export function SiteShell({ locale, products, adminAvailable, children }: { loca
       // A model chip opens its quick view on the page; it does not leave it.
       if (link.hasAttribute("aria-haspopup") || link.hasAttribute("data-no-curtain")) return;
       const url = new URL(link.href, window.location.href);
+      // A link to the page already open (the logo on the home page, the menu's own page, the model already shown) takes
+      // the visitor back to its top, as on most sites (Jakob's law), instead of doing nothing.
+      if (url.origin === window.location.origin && url.pathname === window.location.pathname && url.search === window.location.search && !url.hash && !link.hasAttribute("data-no-curtain")) {
+        event.preventDefault();
+        window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
+        return;
+      }
       if (url.origin !== window.location.origin || url.pathname === window.location.pathname || /\.[a-z0-9]+$/i.test(url.pathname) || url.pathname.startsWith("/admin")) return;
       toTop.current = !url.hash;
       setRouting(true);
@@ -145,6 +166,9 @@ export function SiteShell({ locale, products, adminAvailable, children }: { loca
         </div>
         <nav id="mobile-navigation" className="mobile-nav" hidden={!menuOpen} aria-label={locale === "ar" ? "القائمة الرئيسية للجوال" : "Navigation mobile"}><Navigation key={pathname} locale={locale} pathname={pathname} mobile onNavigate={closeMenu} /><div className="mobile-contact"><a href={`tel:${company.telephone}`}><Phone size={17} />{t.railCall}</a><a href={`mailto:${company.email}`}><Mail size={18} />{t.railMail}</a>{whatsapp && <a href={whatsapp} target="_blank" rel="noopener noreferrer"><MessageCircle size={18} />{t.whatsapp}</a>}</div></nav>
       </header>
+      {/* Staging: on phones the open menu is the one thing in front; the page behind it dims, and a tap there closes the
+          menu, as on most sites (Jakob's law). */}
+      {menuOpen && <div className="menu-scrim" aria-hidden="true" onClick={closeMenu} />}
       <main id="main-content">{children}</main>
       <footer className="site-footer"><Emblem side="end" edge="bottom" />
         <div className="container footer-grid"><div className="footer-brand"><Brand locale={locale} /><p>{t.footerText}</p></div>
