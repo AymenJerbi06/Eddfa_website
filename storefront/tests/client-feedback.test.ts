@@ -12,12 +12,14 @@ import { TechDrawing } from "../src/components/tech-drawing";
 const source = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8");
 
 // The first section's words, button and layout stay as they are (client request, November 2026); its photo was redone
-// in the same style on 25 November 2026, at the user's request.
+// in the same style on 25 November 2026, and on 26 November it got « Voir nos produits » under « Contactez-nous » and
+// charcoal words on the bright marble, at the user's request.
 test("the home page hero keeps its words and layout, with its new photo", () => {
-  const hero = "<section className=\"hero\"><Photo src={asset(\"hero-eden\")} alt=\"\" priority sizes=\"100vw\" className=\"hero-poster\" /><div className=\"hero-shade\" /><div className=\"container hero-content\"><h1><span className=\"hero-brand\">EDDFA</span>{t.heroTitle}</h1><p>{t.heroText}</p><Link href={`/${locale}/contact`} className=\"pill-button light\">{t.contact}</Link></div><HeroNext label={t.what} target=\"about-eddfa\" /></section>";
+  const hero = "<section className=\"hero\"><Photo src={asset(\"hero-eden\")} alt=\"\" priority sizes=\"100vw\" className=\"hero-poster\" /><div className=\"hero-shade\" /><div className=\"container hero-content\"><h1><span className=\"hero-brand\">EDDFA</span>{t.heroTitle}</h1><p>{t.heroText}</p><div className=\"hero-actions\"><Link href={`/${locale}/contact`} className=\"pill-button light\">{t.contact}</Link><Link href={`/${locale}/produits`} className=\"pill-button light hero-products\">{t.heroProducts}</Link></div></div><HeroNext label={t.what} target=\"about-eddfa\" /></section>";
   assert.ok(source("../src/components/pages.tsx").includes(hero));
   assert.deepEqual([messages.fr.heroTitle, messages.fr.heroText, messages.fr.contact, messages.fr.what], ["Sèche-serviettes en aluminium.", "Fabriqués à Sfax. À eau chaude ou électriques, trouvez le confort qui s’accorde à votre salle de bain.", "Contactez-nous", "FABRICANT TUNISIEN"]);
   assert.deepEqual([messages.ar.heroTitle, messages.ar.heroText, messages.ar.contact, messages.ar.what], ["مجففات مناشف من الألمنيوم.", "صُنعت في صفاقس. بالماء الساخن أو بالكهرباء، اختر الراحة المناسبة لحمامك.", "اتصل بنا", "صناعة تونسية"]);
+  assert.deepEqual([messages.fr.heroProducts, messages.ar.heroProducts], ["Voir nos produits", "اكتشف منتجاتنا"]);
   for (const sheet of ["layers", "signature"]) assert.ok(!/\.hero\b/.test(source(`../src/app/${sheet}.css`)), `${sheet}.css must not restyle the hero`);
 });
 
@@ -228,12 +230,13 @@ test("the sections take turns, plate then band, so each one clearly starts and e
 test("Higgsfield films: made from EDDFA's scenes, recorded, light to load, still for reduced motion", () => {
   const film = source("../src/components/film.tsx");
   assert.ok(film.includes("IntersectionObserver") && film.includes("prefers-reduced-motion") && film.includes('preload="none"') && film.includes("muted loop playsInline"), "loops play only on screen, never for reduced motion");
-  assert.ok(film.includes('export const sequences: Record<SequenceName, number> = { story: 72, closer: 48 };'));
+  assert.ok(film.includes('export const sequences: Record<SequenceName, number> = { story: 143, closer: 95 };'), "twice the frames since 26 November 2026, one made between each pair");
+  assert.ok(film.includes("export function createGlide(") && film.includes("export function warmFrames("), "the scroll films glide to the scroll and decode the frames ahead");
   const provenance = source("../ASSET-PROVENANCE.md");
-  for (const name of ["film/story", "film/closer", "film/eden", "film/eclat", "film/aluminium"]) assert.ok(provenance.includes(name), `${name} is recorded in ASSET-PROVENANCE.md`);
+  for (const name of ["film/story", "film/closer", "film/eden", "film/eclat", "film/aluminium", "film/aluminium-light"]) assert.ok(provenance.includes(name), `${name} is recorded in ASSET-PROVENANCE.md`);
   const root = new URL("../public/eddfa/film/", import.meta.url);
-  for (const name of ["eden", "eclat", "aluminium"]) for (const file of [`${name}.webp`, `${name}-720.mp4`, `${name}-1080.mp4`]) assert.ok(existsSync(new URL(file, root)), file);
-  for (const [name, count] of [["story", 72], ["closer", 48]] as const) for (const size of ["d", "m"]) for (const index of [1, count]) assert.ok(existsSync(new URL(`${name}/${size}/${String(index).padStart(3, "0")}.webp`, root)), `${name}/${size}/${index}`);
+  for (const name of ["eden", "eclat", "aluminium", "aluminium-light"]) for (const file of [`${name}.webp`, `${name}-720.mp4`, `${name}-1080.mp4`]) assert.ok(existsSync(new URL(file, root)), file);
+  for (const [name, count] of [["story", 143], ["closer", 95]] as const) for (const size of ["d", "m"]) for (const index of [1, count]) assert.ok(existsSync(new URL(`${name}/${size}/${String(index).padStart(3, "0")}.webp`, root)), `${name}/${size}/${index}`);
 });
 
 test("the quote basket: added while exploring, kept in the browser, opened on the quote page (25 November 2026)", () => {
@@ -406,4 +409,23 @@ test("the first section's arrow answers the visitor: pointing, pressing, clickin
   const globals = source("../src/app/globals.css");
   for (const rule of [".hero-next:hover .cue-ring", ".hero-next:active .cue-ring", ".hero-next:focus-visible .cue-ring", "calc(var(--cue) * 100%)", ".hero-next[data-gone]"]) assert.ok(globals.includes(rule), rule);
   for (const sheet of ["layers", "signature"]) assert.ok(!source(`../src/app/${sheet}.css`).includes("cue-ring"), `${sheet}.css leaves the first section alone`);
+});
+
+// The user, 25-26 November 2026 (night): the arrow keeps bouncing until the visitor scrolls; charcoal words on the bright
+// marble; « Voir nos produits » under « Contactez-nous »; the light aluminium film on a few marble sections.
+test("the first section reads in charcoal on the bright marble, and its arrow bounces until the visitor scrolls", () => {
+  const globals = source("../src/app/globals.css");
+  assert.ok(globals.includes("padding-block: 120px 60px; color: var(--graphite); }") && globals.includes(".hero-content p { color: rgb(35 37 38 / 84%);"), "the words are in the countertop's charcoal");
+  assert.ok(globals.includes(".hero-shade { position: absolute; inset: 0; background: radial-gradient(") && globals.includes('[dir="rtl"] .hero-shade { scale: -1 1; }'), "a veil of marble behind the words, mirrored in Arabic");
+  assert.ok(globals.includes(".hero-actions { display: inline-grid; gap: 12px; }") && globals.includes(".hero .pill-button.hero-products {"), "the two buttons, one under the other, the same width");
+  assert.ok(globals.includes(".hero-next:not([data-scrolled]) .cue-ring { animation: cue-bounce 1.8s infinite; }") && globals.includes("@keyframes cue-bounce"), "the arrow bounces until the visitor scrolls");
+  assert.ok(source("../src/components/hero-next.tsx").includes('node.toggleAttribute("data-scrolled", progress > 0.005);'));
+  assert.ok(source("../src/app/layers.css").includes(".site-header:not(.solid):not(.stuck) { background: rgb(35 37 38 / 86%);"), "the header stays dark over the bright photo");
+});
+
+test("a few marble sections carry the light aluminium film", () => {
+  const uses = source("../src/components/pages.tsx").split('<FilmLoop name="aluminium-light" wide className="plate-film" />').length - 1 + source("../src/components/guide.tsx").split('<FilmLoop name="aluminium-light" wide className="plate-film" />').length - 1;
+  assert.equal(uses, 4, "the guide, the questions, Contact and the products chapter of « Présentation »");
+  assert.ok(source("../src/components/film.tsx").includes('export type LoopName = "eden" | "eclat" | "aluminium" | "aluminium-light";'));
+  assert.ok(source("../src/app/signature.css").includes(".plate-film { position: absolute; inset: 0; z-index: -2;"));
 });

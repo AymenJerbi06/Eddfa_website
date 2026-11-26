@@ -5,7 +5,7 @@ import { FileText } from "lucide-react";
 import { messages, type Locale } from "@/lib/content";
 import { Exigences, principleFacts } from "./showcase";
 import { RadiatorMark } from "./radiator-mark";
-import { drawFrames, frameSrc, loadFrames, sequences, useReducedMotion } from "./film";
+import { createGlide, drawFrames, frameSrc, loadFrames, sequences, useReducedMotion, warmFrames } from "./film";
 
 // « Nos exigences » as a scroll film. The screen holds while the visitor scrolls, and a Higgsfield film made from
 // EDDFA's EDEN 80 scenes moves with them: from the chrome valve and the aluminium tubes back to the whole sunlit
@@ -31,20 +31,26 @@ export function ScrollStory({ locale }: { locale: Locale }) {
     let raf = 0;
     let small: boolean | null = null;
 
-    const draw = () => {
+    // The film glides to where the scroll is (createGlide), decoding the frames just ahead as it goes.
+    const glide = createGlide((position, direction) => {
+      if (images.length && drawFrames(context, images, position)) setReady(true);
+      warmFrames(images, position, direction);
+    });
+    const aim = () => {
       raf = 0;
       const box = section.getBoundingClientRect();
       const progress = clamp(-box.top / Math.max(1, box.height - window.innerHeight));
       setChapter(Math.min(2, Math.floor(progress * 3)));
-      if (images.length && drawFrames(context, images, progress * (images.length - 1))) setReady(true);
+      if (images.length) glide.to(progress * (images.length - 1));
     };
-    const schedule = () => { if (!raf) raf = requestAnimationFrame(draw); };
+    const schedule = () => { if (!raf) raf = requestAnimationFrame(aim); };
+    const loaded = () => { glide.redraw(); schedule(); };
     // Phones get the film cut upright around the radiator; computers get the wide frames.
     const load = () => {
       const nowSmall = element.clientHeight > element.clientWidth;
       if (nowSmall === small) return;
       small = nowSmall;
-      images = loadFrames("story", nowSmall, schedule);
+      images = loadFrames("story", nowSmall, loaded);
     };
     let near = false;
     const size = () => {
@@ -52,6 +58,7 @@ export function ScrollStory({ locale }: { locale: Locale }) {
       element.width = Math.round(element.clientWidth * scale);
       element.height = Math.round(element.clientHeight * scale);
       if (near) load();
+      glide.redraw();
       schedule();
     };
     const watch = new IntersectionObserver(entries => {
@@ -65,7 +72,7 @@ export function ScrollStory({ locale }: { locale: Locale }) {
     resize.observe(element);
     window.addEventListener("scroll", schedule, { passive: true });
     size();
-    return () => { watch.disconnect(); resize.disconnect(); window.removeEventListener("scroll", schedule); cancelAnimationFrame(raf); };
+    return () => { watch.disconnect(); resize.disconnect(); window.removeEventListener("scroll", schedule); cancelAnimationFrame(raf); glide.stop(); };
   }, [still]);
 
   // The three numbers under the meter take the visitor to each requirement: the page scrolls to the middle of its third

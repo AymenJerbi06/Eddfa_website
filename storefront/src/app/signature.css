@@ -980,3 +980,8 @@
   .page-curtain { display: none !important; }
 }
 
+/* The light aluminium film behind a few marble sections (the user, 26 November 2026): the tubes of the dark bands,
+   lifted to the marble's white, with the same light gliding along them. It fades into the plate at its top and bottom,
+   and is a still picture for visitors who ask for less motion (FilmLoop). Home: the guide and the questions; Contact;
+   the products chapter of « Présentation ». */
+.plate-film { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; pointer-events: none; -webkit-mask-image: linear-gradient(180deg, transparent, black 12%, black 88%, transparent); mask-image: linear-gradient(180deg, transparent, black 12%, black 88%, transparent); }

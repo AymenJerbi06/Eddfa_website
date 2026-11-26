@@ -131,6 +131,8 @@ main > .plate:first-child { margin-top: calc(80px + var(--inset)); }
 .nav-quote .nav-link-row > a:hover, .nav-quote .nav-link-row > a[aria-current="page"] { background: var(--white); color: var(--graphite); box-shadow: var(--heat); }
 @keyframes header-drop { from { transform: translateY(-100%); } }
 @media (min-width: 922px) {
+  /* Over the home page's bright first section the header is frosted charcoal, like the compact one (26 Nov 2026). */
+  .site-header:not(.solid):not(.stuck) { background: rgb(35 37 38 / 86%); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
   .site-header.stuck { position: fixed; height: 68px; background: rgb(35 37 38 / 92%); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: 0 1px 0 var(--line-dark); animation: header-drop 0.45s var(--ease); }
   .site-header.stuck .header-inner { height: 68px; }
   .site-header.stuck .brand-logo { width: 136px; height: 35px; }

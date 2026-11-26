@@ -78,7 +78,7 @@ function ProBand({ locale }: { locale: Locale }) {
 // Five questions answered from EDDFA's own information, folded until opened.
 function FaqSection({ locale }: { locale: Locale }) {
   const t = messages[locale];
-  return <section className="section plate faq-section"><Emblem side="start" edge="bottom" /><div className="container faq-grid">
+  return <section className="section plate faq-section has-film"><FilmLoop name="aluminium-light" wide className="plate-film" /><Emblem side="start" edge="bottom" /><div className="container faq-grid">
     <div className="faq-intro"><h2 className="title">{t.faqTitle}</h2><p>{t.contactText}</p><a className="text-link" href={`tel:${company.telephone}`}><Phone size={16} /><span dir="ltr">+216 {company.phone}</span></a></div>
     <div className="faq-list">{t.faq.map(item => <details key={item.q} className="soft-details"><summary>{item.q}</summary><div className="soft-details-body"><p>{item.a}</p>{item.href && <Link className="text-link accent" href={`/${locale}${item.href}`}><span>{item.cta}</span><ChevronRight size={16} className="directional-icon" /></Link>}</div></details>)}</div>
   </div></section>;
@@ -99,7 +99,7 @@ export function CallToAction({ locale }: { locale: Locale }) {
 export function HomePage({ locale, products }: { locale: Locale; products: CatalogProduct[] }) {
   const t = messages[locale];
   return <>
-    <section className="hero"><Photo src={asset("hero-eden")} alt="" priority sizes="100vw" className="hero-poster" /><div className="hero-shade" /><div className="container hero-content"><h1><span className="hero-brand">EDDFA</span>{t.heroTitle}</h1><p>{t.heroText}</p><Link href={`/${locale}/contact`} className="pill-button light">{t.contact}</Link></div><HeroNext label={t.what} target="about-eddfa" /></section>
+    <section className="hero"><Photo src={asset("hero-eden")} alt="" priority sizes="100vw" className="hero-poster" /><div className="hero-shade" /><div className="container hero-content"><h1><span className="hero-brand">EDDFA</span>{t.heroTitle}</h1><p>{t.heroText}</p><div className="hero-actions"><Link href={`/${locale}/contact`} className="pill-button light">{t.contact}</Link><Link href={`/${locale}/produits`} className="pill-button light hero-products">{t.heroProducts}</Link></div></div><HeroNext label={t.what} target="about-eddfa" /></section>
     <AboutSection locale={locale} />
     <ScrollStory locale={locale} />
     <HomeGuide locale={locale} />
@@ -186,7 +186,7 @@ function PresentationSection({ locale }: { locale: Locale }) {
 
 function ProductsChapter({ locale }: { locale: Locale }) {
   const t = messages[locale];
-  return <section id="produits" className="section plate products-chapter"><Emblem side="end" edge="bottom" /><div className="container"><SectionIntro title={t.productsTitle} />
+  return <section id="produits" className="section plate products-chapter has-film"><FilmLoop name="aluminium-light" wide className="plate-film" /><Emblem side="end" edge="bottom" /><div className="container"><SectionIntro title={t.productsTitle} />
     <ul className="range-index">{families.map(family => <li key={family.id}><Link href={`/${locale}/produits/${family.id}`}><bdi>{family.name}</bdi><span>{family.kind[locale]}</span><ChevronRight size={18} className="directional-icon" /></Link></li>)}</ul>
   </div></section>;
 }
@@ -225,7 +225,7 @@ export function AboutPage({ locale }: { locale: Locale }) {
 export function ContactPage({ locale }: { locale: Locale }) {
   const t = messages[locale];
   const whatsapp = whatsappHref();
-  return <><PageBanner locale={locale} title={t.contactTitle} label={t.nav[4]} /><section className="section plate page-section has-banner contact-section"><Emblem side="end" /><div id={pageContentId} className="container page-content-target"><div className="page-heading"><p>{t.contactText}</p></div><div className="contact-grid">
+  return <><PageBanner locale={locale} title={t.contactTitle} label={t.nav[4]} /><section className="section plate page-section has-banner contact-section has-film"><FilmLoop name="aluminium-light" wide className="plate-film" /><Emblem side="end" /><div id={pageContentId} className="container page-content-target"><div className="page-heading"><p>{t.contactText}</p></div><div className="contact-grid">
     <div className="contact-details">
       <div className="contact-chips">
         <a className="contact-chip" href={`tel:${company.telephone}`}><Phone size={19} /><span dir="ltr">+216 {company.phone}</span></a>

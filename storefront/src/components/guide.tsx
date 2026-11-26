@@ -11,6 +11,7 @@ import { Photo } from "./media";
 import { Lines } from "./lines";
 import { RadiatorMark, markBars } from "./radiator-mark";
 import { Emblem } from "./emblem";
+import { FilmLoop } from "./film";
 import { AddToQuote } from "./basket";
 
 type Range = "eden" | "eclat";
@@ -97,7 +98,7 @@ export function HomeGuide({ locale }: { locale: Locale }) {
   const progress = step < RESULT ? `${t.guideProgress.replace("{n}", String(step + 1))} · ${t.guideSteps[step]}` : t.guideResult;
   const powerLine = <p className="guide-live"><span>{t.requiredPower}</span><strong dir="ltr">≈ {Math.round(shownPower)} W</strong></p>;
 
-  return <section id="trouver" className="section plate guide-section"><Emblem side="start" /><div className="container">
+  return <section id="trouver" className="section plate guide-section has-film"><FilmLoop name="aluminium-light" wide className="plate-film" /><Emblem side="start" /><div className="container">
     <div className="guide-layout">
     <div className="section-intro"><h2 className="title"><Lines text={t.guideTitle} /></h2><p>{t.guideText}</p></div>
     <div ref={card} className={`guide-card${step === RESULT ? " is-result" : ""}`}>

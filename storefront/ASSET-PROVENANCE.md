@@ -83,13 +83,17 @@ the films in the Higgsfield sandbox (WebP), the loops re-encoded in H.264 withou
 
 | Files in public/eddfa | Made from | Use |
 | --- | --- | --- |
-| film/story/d (72 frames, 1600 px) and film/story/m (72 upright frames for phones) | Kling 3.0 pro, 10 s: start frame a new close-up of the EDEN 80's right rail, lowest tubes and chrome valve (Nano Banana Pro, 2 credits, from scene-eden-80-detail and scene-eden-80-wide), end frame scene-eden-80-wide cut to 16:9. A slow pull-back from the valve to the whole room; checked: 3 + 3 + 7 tubes at the end, two valves with white caps. | « Nos exigences » scroll film on the home page. |
-| film/closer/d (48 frames, 1200 px) and film/closer/m (48 frames, 800 px) | Kling 3.0 pro, 8 s: start frame eden-cover (the first section's photo) cut to 16:9, darker and cooler; end frame the same photo framed closer and warmer. The lights come on and the room warms up while the camera moves in; the radiator keeps its tube groups and brackets. | The closer on every page but Contact. |
+| film/story/d (143 frames, 1600 px) and film/story/m (143 upright frames for phones) | Kling 3.0 pro, 10 s: start frame a new close-up of the EDEN 80's right rail, lowest tubes and chrome valve (Nano Banana Pro, 2 credits, from scene-eden-80-detail and scene-eden-80-wide), end frame scene-eden-80-wide cut to 16:9. A slow pull-back from the valve to the whole room; checked: 3 + 3 + 7 tubes at the end, two valves with white caps. | « Nos exigences » scroll film on the home page. |
+| film/closer/d (95 frames, 1200 px) and film/closer/m (95 frames, 800 px) | Kling 3.0 pro, 8 s: start frame eden-cover (the first section's photo) cut to 16:9, darker and cooler; end frame the same photo framed closer and warmer. The lights come on and the room warms up while the camera moves in; the radiator keeps its tube groups and brackets. | The closer on every page but Contact. |
 | film/eden.webp, film/eden-720.mp4, film/eden-1080.mp4 | Kling 3.0 pro, 5 s, start and end frame scene-eden-80-wide cut to 16:9: only the light, the leaf shadows and the branches move. | EDEN card on the home page, EDEN range banner. |
 | film/eclat.webp, film/eclat-720.mp4, film/eclat-1080.mp4 | Kling 3.0 pro, 5 s, start and end frame scene-eclat-confort-wide cut to 16:9; same calm motion. | ECLAT card on the home page, ECLAT range banner. |
 | film/aluminium.webp, film/aluminium-720.mp4, film/aluminium-1080.mp4 | Kling 3.0 pro, 5 s, start and end frame a new macro of matte black aluminium tubes in low warm light (Nano Banana Pro, 2 credits, from scene-eden-80-detail); a band of light glides along the tubes. | Title bands of the inner pages, the band for installers and resellers. |
+| film/aluminium-light.webp, film/aluminium-light-720.mp4, film/aluminium-light-1080.mp4 | The aluminium film above, not generated again: its tones lifted to the marble's white with ffmpeg (curves, colour softened), so the tubes read as white aluminium and the same light glides along them (26 November 2026, at the user's request; no credits). | Behind a few marble sections: the home page's guide and questions, the Contact page, the products chapter of « Présentation ». |
 
 The loops play muted only while on screen and stop off screen; the scroll films move only when the visitor scrolls.
+On 26 November 2026 the two scroll films got twice their frames (the user found the zoom laggy): every original frame
+is kept as it was, and one frame between each pair was made from its two neighbours by motion interpolation (ffmpeg
+`minterpolate`, checked frame by frame; no credits).
 Visitors who ask for reduced motion see still pictures (the first frame, or the closer's last one).
 
 ## 25 November 2026: the first section's new photo, and the same wall before and after

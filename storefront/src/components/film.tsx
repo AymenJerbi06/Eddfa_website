@@ -4,11 +4,16 @@ import { useEffect, useRef, useState } from "react";
 
 // EDDFA's films, made with Higgsfield from EDDFA's own scenes (see ASSET-PROVENANCE.md, "Films").
 // - Loops (EDEN's room, ECLAT's room, the aluminium tubes) play quietly while they are on screen and stop off screen.
-// - Scroll films (« Nos exigences » and the closer) are frame sequences that move only when the visitor scrolls.
+// - Scroll films (« Nos exigences » and the closer) are frame sequences that move only when the visitor scrolls. Since
+//   26 November 2026 they have twice the frames (one made between each pair, see ASSET-PROVENANCE.md), the frames just
+//   ahead are decoded before they are needed, and the film glides to where the scroll is at the screen's own rate
+//   instead of jumping with each scroll event (the user found the zoom laggy).
+// - The light aluminium film (the dark tubes lifted to the marble's white, the same light gliding along them) sits
+//   behind a few of the marble sections (the user, 26 November 2026).
 // Visitors who ask for reduced motion see still pictures, and nothing plays before it is near the screen.
-export type LoopName = "eden" | "eclat" | "aluminium";
+export type LoopName = "eden" | "eclat" | "aluminium" | "aluminium-light";
 export type SequenceName = "story" | "closer";
-export const sequences: Record<SequenceName, number> = { story: 72, closer: 48 };
+export const sequences: Record<SequenceName, number> = { story: 143, closer: 95 };
 export const loopPoster = (name: LoopName) => `/eddfa/film/${name}.webp`;
 export const frameSrc = (name: SequenceName, index: number, small: boolean) => `/eddfa/film/${name}/${small ? "m" : "d"}/${String(index + 1).padStart(3, "0")}.webp`;
 
@@ -71,6 +76,43 @@ export function drawFrames(context: CanvasRenderingContext2D, images: HTMLImageE
   return true;
 }
 
+// Asks the browser to decode the frames just ahead of the film (in the direction it is going) off the main thread, so
+// drawing them during the scroll costs nothing. A frame is asked again after a few seconds, in case it was let go.
+const warmed = new WeakMap<HTMLImageElement, number>();
+export function warmFrames(images: HTMLImageElement[], position: number, direction: number) {
+  const now = performance.now(), base = Math.round(position);
+  for (let offset = -2; offset <= 10; offset++) {
+    const image = images[base + (direction < 0 ? -offset : offset)];
+    if (!image?.complete || !image.naturalWidth) continue;
+    const at = warmed.get(image);
+    if (at && now - at < 4000) continue;
+    warmed.set(image, now);
+    image.decode().catch(() => warmed.delete(image));
+  }
+}
+
+// Moves a film towards where the scroll is, a share of the way at each frame of the screen (60 or 120 a second), so
+// it glides instead of stepping with the scroll events; it stops as soon as it has arrived.
+export function createGlide(render: (position: number, direction: number) => void) {
+  let shown = -1, target = 0, raf = 0, last = 0;
+  const step = (now: number) => {
+    raf = 0;
+    const elapsed = last ? Math.min(64, now - last) : 16;
+    last = now;
+    const from = shown;
+    shown = shown < 0 ? target : shown + (target - shown) * (1 - Math.exp(-elapsed / 80));
+    if (Math.abs(target - shown) < 0.01) shown = target;
+    render(shown, Math.sign(shown - from));
+    if (shown !== target) raf = requestAnimationFrame(step);
+    else last = 0;
+  };
+  return {
+    to(next: number) { target = next; if (!raf) raf = requestAnimationFrame(step); },
+    redraw() { if (shown >= 0) render(shown, 0); },
+    stop() { cancelAnimationFrame(raf); raf = 0; },
+  };
+}
+
 // Fetches a sequence's frames: the first one, then every eighth, then the rest, so scrolling works from the start.
 export function loadFrames(name: SequenceName, small: boolean, onLoad: () => void) {
   const count = sequences[name];
@@ -99,29 +141,35 @@ export function ScrubFilm({ name, alt }: { name: SequenceName; alt: string }) {
     if (!box || !element || !context) return;
     let images: HTMLImageElement[] = [];
     let raf = 0;
-    const draw = () => {
+    const glide = createGlide((position, direction) => {
+      if (drawFrames(context, images, position)) setReady(true);
+      warmFrames(images, position, direction);
+    });
+    const aim = () => {
       raf = 0;
       const rect = box.getBoundingClientRect(), view = window.innerHeight;
       const progress = clamp((view - rect.top) / (view * 0.6 + rect.height * 0.5));
-      if (drawFrames(context, images, progress * (images.length - 1))) setReady(true);
+      if (images.length) glide.to(progress * (images.length - 1));
     };
-    const schedule = () => { if (!raf) raf = requestAnimationFrame(draw); };
+    const schedule = () => { if (!raf) raf = requestAnimationFrame(aim); };
+    const loaded = () => { glide.redraw(); schedule(); };
     const size = () => {
       const scale = Math.min(2, window.devicePixelRatio || 1);
       element.width = Math.round(element.clientWidth * scale);
       element.height = Math.round(element.clientHeight * scale);
+      glide.redraw();
       schedule();
     };
     const near = new IntersectionObserver(entries => {
       if (!entries.some(entry => entry.isIntersecting)) return;
       near.disconnect();
-      images = loadFrames(name, element.clientWidth * Math.min(2, window.devicePixelRatio || 1) <= 1000, schedule);
+      images = loadFrames(name, element.clientWidth * Math.min(2, window.devicePixelRatio || 1) <= 1000, loaded);
     }, { rootMargin: "120% 0px" });
     near.observe(box);
     const resize = new ResizeObserver(size);
     resize.observe(element);
     window.addEventListener("scroll", schedule, { passive: true });
-    return () => { near.disconnect(); resize.disconnect(); window.removeEventListener("scroll", schedule); cancelAnimationFrame(raf); };
+    return () => { near.disconnect(); resize.disconnect(); window.removeEventListener("scroll", schedule); cancelAnimationFrame(raf); glide.stop(); };
   }, [name, still]);
   const last = sequences[name] - 1;
   return <div ref={frame} className="scrub-film">
