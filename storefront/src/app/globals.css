@@ -92,6 +92,21 @@ address { font-style: normal; }
 .hero-content p { color: white; max-width: 1080px; font-size: 16px; margin-bottom: 36px; }
 .hero-next { position: absolute; bottom: 18px; inset-inline: 0; display: flex; align-items: center; justify-content: center; gap: 10px; color: white; font-size: 11px; }
 .hero-next:hover { color: #f0d28e; }
+/* The cue at the bottom of the first section asks for the scroll (client request, 25 November 2026): « Fabricant
+   tunisien » over a thin rail where a light runs down, like the light along the aluminium tubes, and an arrow that
+   nods. It fades as soon as the visitor scrolls; it stays still for visitors who ask for less motion. */
+.hero-next { flex-direction: column; gap: 12px; bottom: 22px; letter-spacing: 0.16em; animation: cue-in 0.9s cubic-bezier(0.22, 0.68, 0.2, 1) 0.9s backwards; transition: opacity 0.4s, translate 0.4s; }
+.hero-next svg { order: 2; animation: cue-arrow 2.4s ease-in-out 1.8s infinite; }
+.hero-next::after { content: ""; order: 1; width: 2px; height: 46px; border-radius: 2px; background: linear-gradient(180deg, transparent, var(--brass-light, #d4b57c) 50%, transparent) 0 -200% / 2px 40% no-repeat, rgb(255 255 255 / 28%); animation: cue-light 2.4s cubic-bezier(0.65, 0.05, 0.35, 1) 1.8s infinite; }
+.site-shell[data-scrolled] .hero-next { opacity: 0; translate: 0 10px; pointer-events: none; }
+@keyframes cue-in { from { opacity: 0; translate: 0 14px; } }
+@keyframes cue-light { from { background-position: 0 -200%, 0 0; } 75%, to { background-position: 0 300%, 0 0; } }
+@keyframes cue-arrow { 0%, 100% { translate: 0 0; } 50% { translate: 0 5px; } }
+@media (prefers-reduced-motion: reduce) { .hero-next, .hero-next svg, .hero-next::after { animation: none; } }
+/* The first section's photo, redone on 25 November 2026 in the same marble, wood and brass: the EDEN hangs on the
+   right, the text sits on the sunlit wall. In Arabic the text sits on the right, so the photo is mirrored. */
+.hero-poster { object-position: 85% center; }
+[dir="rtl"] .hero-poster { scale: -1 1; }
 .video-toggle { position: absolute; inset-inline-end: 24px; bottom: 20px; background: rgb(0 0 0 / 30%); color: white; border: 1px solid rgb(255 255 255 / 50%); border-radius: 50%; }
 .video-toggle:hover { background: rgb(0 0 0 / 60%); }
 
@@ -308,7 +323,9 @@ address { font-style: normal; }
   .hero h1 { font-size: 32px; max-width: 440px; margin-bottom: 12px; }
   .hero-content p { font-size: 15px; max-width: 400px; margin-bottom: 28px; }
   .hero-next { min-height: 44px; bottom: 8px; inset-inline: 76px; text-align: center; }
-  .hero-poster { object-position: 15% center; }
+  .hero-next { gap: 8px; bottom: 10px; }
+  .hero-next::after { height: 30px; }
+  .hero-poster { object-position: 94% center; }
   .about-grid, .commitment-grid, .product-detail-grid, .contact-grid { grid-template-columns: 1fr; gap: 32px; }
   .about-photo { height: auto; aspect-ratio: 1.08; border-radius: 16px; }
   .about-copy h2 { font-size: 32px; }

@@ -8,6 +8,7 @@ import { formatDecimal, insulationCoefficients, insulationLevels, recommend, req
 import { useCatalog } from "./catalog-context";
 import { useTweenedNumber } from "./motion";
 import { Photo } from "./media";
+import { AddToQuote } from "./basket";
 
 const size = (variant: ProductVariant) => `${variant.dimensions[0]} × ${variant.dimensions[1]} mm`;
 const fill = (value: number, range: { min: number; max: number }) => ({ "--fill": `${((value - range.min) / (range.max - range.min)) * 100}%` }) as React.CSSProperties;
@@ -50,7 +51,7 @@ export function SizingCalculator({ locale, family }: { locale: Locale; family: P
   const { best, alternatives } = recommend(catalog.filter(product => product.category === family.id), family.sizing, power);
   const other = family.id === "eden" ? { href: `/${locale}/produits/eclat#choisir`, label: t.switchToEclat } : { href: `/${locale}/produits/eden#choisir`, label: t.switchToEden };
   const pickName = best ? `${best.units > 1 ? `${best.units} × ` : ""}${best.product.title[locale]}` : "";
-  return <section id="choisir" className="section sizing-section"><div className="container">
+  return <section id="choisir" className="section plate sizing-section"><div className="container">
     <div className="section-heading"><span className="eyebrow">{t.sizingEyebrow}</span><h2>{t.sizingTitle}</h2><p>{t.sizingText}</p></div>
     <div className="sizing-panel">
       <div className="sizing-controls">
@@ -81,7 +82,7 @@ export function SizingCalculator({ locale, family }: { locale: Locale; family: P
             <div><span className="eyebrow">{t.recommended}</span><h3><bdi>{pickName}</bdi></h3><p className="sizing-spec" dir="ltr">{size(best.variant)} · {best.units > 1 ? `${best.units} × ` : ""}{best.output} W</p></div>
           </div> : <p className="sizing-warning">{t.noneAtAll}</p>}
           {best && best.units > 1 && <p className="sizing-warning">{t.noneSingle}</p>}
-          {best && <div className="sizing-actions"><Link className="pill-button gold" href={`/${locale}/devis?ref=${best.variant.id}&qty=${best.units}`}>{t.addToQuote}</Link><Link className="pill-button ghost-light" href={`/${locale}/produits/${best.product.handle}`}>{t.viewModel}</Link></div>}
+          {best && <div className="sizing-actions"><AddToQuote key={`${best.variant.id}-${best.units}`} locale={locale} lineId={`v:${best.variant.id}`} quantity={best.units} /><Link className="pill-button ghost-light" href={`/${locale}/produits/${best.product.handle}`}>{t.viewModel}</Link></div>}
           {alternatives.length > 0 && <div className="sizing-alternatives"><span className="eyebrow">{t.alternatives}</span><div>{alternatives.map(option => <Link key={option.variant.id} href={`/${locale}/produits/${option.product.handle}`}><bdi>{option.product.title[locale]}</bdi> <span dir="ltr">{option.output} W</span></Link>)}</div></div>}
           <p className="sr-only" aria-live="polite">{`${t.requiredPower} ${power} W. ${best ? `${t.recommended} ${pickName}, ${size(best.variant)}.` : t.noneAtAll}`}</p>
         </div>

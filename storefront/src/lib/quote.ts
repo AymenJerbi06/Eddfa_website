@@ -2,10 +2,10 @@ import { families, messages, type CatalogProduct, type Locale, type ProductVaria
 import { variantLabel } from "./products";
 
 // Quote lines: one per product version, and one general line for a range that has no articles online yet.
-export type QuoteLine = { id: string; title: string; detail: string };
+export type QuoteLine = { id: string; title: string; detail: string; image?: string };
 export type QuoteGroup = { key: string; label: string; lines: QuoteLine[] };
 export type QuoteSelection = Record<string, number>;
-export type QuoteQuery = { ref?: string; gamme?: string; qty?: string };
+export type QuoteQuery = { ref?: string; gamme?: string; qty?: string; profil?: string };
 export const maxQuantity = 99;
 
 export function clampQuantity(value: number) {
@@ -18,8 +18,8 @@ function lineDetail(variant: ProductVariant) {
 }
 
 function productLines(product: CatalogProduct, locale: Locale): QuoteLine[] {
-  if (!product.variants.length) return [{ id: `p:${product.id}`, title: product.title[locale], detail: "" }];
-  return product.variants.map(variant => ({ id: `v:${variant.id}`, title: product.title[locale], detail: lineDetail(variant) }));
+  if (!product.variants.length) return [{ id: `p:${product.id}`, title: product.title[locale], detail: "", image: product.image }];
+  return product.variants.map(variant => ({ id: `v:${variant.id}`, title: product.title[locale], detail: lineDetail(variant), image: product.image }));
 }
 
 export function quoteGroups(products: CatalogProduct[], locale: Locale): QuoteGroup[] {

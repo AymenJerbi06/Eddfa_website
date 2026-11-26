@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "@fontsource-variable/montserrat";
-import "@fontsource-variable/bricolage-grotesque";
+// Karla stays for one button only: the first section's « Contactez-nous », which is kept exactly as it is.
 import "@fontsource-variable/karla";
 import "@fontsource-variable/noto-sans-arabic";
 import "./globals.css";

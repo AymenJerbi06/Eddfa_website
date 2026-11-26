@@ -3,44 +3,15 @@
 import { useCallback, useEffect, useId, useState } from "react";
 import { flushSync } from "react-dom";
 import useEmblaCarousel from "embla-carousel-react";
-import Autoplay from "embla-carousel-autoplay";
 import * as Dialog from "@radix-ui/react-dialog";
-import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Expand, Pause, Play, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Expand, X } from "lucide-react";
 import { inspirations, messages, type Inspiration, type Locale } from "@/lib/content";
 import { Photo } from "./media";
 
-function useRotatingCarousel(locale: Locale, modalOpen = false, align: "start" | "center" = "start") {
-  const [autoplay] = useState(() => Autoplay({ delay: 3000, playOnInit: false, stopOnMouseEnter: false, stopOnFocusIn: true, stopOnInteraction: true, rootNode: root => root.parentElement }));
-  const [paused, setPaused] = useState(false);
-  const [viewport, api] = useEmblaCarousel({ loop: true, align, direction: locale === "ar" ? "rtl" : "ltr" }, [autoplay]);
-  useEffect(() => {
-    if (!api) return;
-    const root = api.rootNode().parentElement ?? api.rootNode();
-    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let visible = false;
-    const sync = () => {
-      // The play control must be able to resume rotation without losing focus.
-      const contentFocused = root.contains(document.activeElement) && document.activeElement !== root.querySelector(".carousel-pause");
-      if (visible && !motion.matches && !paused && !modalOpen && !contentFocused) {
-        if (!autoplay.isPlaying()) autoplay.play();
-      } else autoplay.stop();
-    };
-    const observer = new IntersectionObserver(entries => { visible = entries[0].isIntersecting; sync(); }, { threshold: 0.15 });
-    const resume = () => queueMicrotask(sync);
-    observer.observe(root);
-    api.on("reInit", sync);
-    motion.addEventListener("change", sync);
-    root.addEventListener("focusin", sync);
-    root.addEventListener("focusout", resume);
-    root.addEventListener("pointerup", resume);
-    return () => { observer.disconnect(); api.off("reInit", sync); motion.removeEventListener("change", sync); root.removeEventListener("focusin", sync); root.removeEventListener("focusout", resume); root.removeEventListener("pointerup", resume); autoplay.stop(); };
-  }, [api, autoplay, paused, modalOpen]);
-  return { viewport, api, paused, togglePause: () => setPaused(value => !value) };
-}
-
-function RotationButton({ locale, paused, onClick }: { locale: Locale; paused: boolean; onClick: () => void }) {
-  const label = locale === "ar" ? (paused ? "تشغيل العرض" : "إيقاف العرض مؤقتا") : (paused ? "Reprendre le défilement" : "Mettre le défilement en pause");
-  return <button type="button" className="carousel-pause icon-button" aria-label={label} title={label} aria-pressed={paused} onClick={onClick}>{paused ? <Play size={17} /> : <Pause size={17} />}</button>;
+// The photo strip moves only when the visitor moves it: arrows, a swipe or a drag. Nothing turns by itself.
+function useStripCarousel(locale: Locale, align: "start" | "center" = "start") {
+  const [viewport, api] = useEmblaCarousel({ loop: true, align, direction: locale === "ar" ? "rtl" : "ltr" });
+  return { viewport, api };
 }
 
 export function GalleryDialog({ locale, images, index, onIndexChange }: { locale: Locale; images: { image: string; title: string }[]; index: number | null; onIndexChange: (index: number | null) => void }) {
@@ -61,15 +32,24 @@ export function ProjectCarousel({ locale }: { locale: Locale }) {
   const t = messages[locale];
   const [selected, setSelected] = useState(0);
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
-  const { viewport, api, paused, togglePause } = useRotatingCarousel(locale, galleryIndex !== null, "center");
+  const { viewport, api } = useStripCarousel(locale, "center");
   const update = useCallback(() => setSelected(api?.selectedScrollSnap() ?? 0), [api]);
   useEffect(() => { if (!api) return; update(); api.on("select", update).on("reInit", update); return () => { api.off("select", update).off("reInit", update); }; }, [api, update]);
   return <>
-    <div className="project-carousel filmstrip" aria-roledescription="carousel" aria-label={t.projects} data-current-slide={selected + 1}>
+    <div className="project-carousel filmstrip" aria-roledescription="carousel" aria-label={t.projects} data-current-slide={selected + 1}
+      onKeyDown={event => {
+        // From a photo, the arrow keys move the strip (mirrored in Arabic), like the arrows on screen.
+        if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+        event.preventDefault();
+        const box = event.currentTarget;
+        const next = (event.key === "ArrowRight") === (locale !== "ar");
+        if (next) api?.scrollNext(); else api?.scrollPrev();
+        const target = (selected + (next ? 1 : -1) + strip.length) % strip.length;
+        requestAnimationFrame(() => box.querySelectorAll<HTMLButtonElement>(".project-tile")[target]?.focus({ preventScroll: true }));
+      }}>
       <div className="carousel-viewport" ref={viewport}><div className="carousel-track">{strip.map((p, index) => <div className={`project-slide${selected === index ? " is-selected" : ""}`} key={p.id}><button type="button" className="project-tile" onClick={() => { if (selected === index) setGalleryIndex(index); else api?.scrollTo(index); }} aria-label={`${t.zoom} : ${p.title[locale]}`}><Photo src={p.image} alt={p.title[locale]} /><span className="project-caption">{p.title[locale]}<Expand size={20} /></span></button></div>)}</div></div>
       <button className="carousel-arrow prev icon-button" type="button" aria-label={t.previous} onClick={() => api?.scrollPrev()}><ArrowLeft size={24} className="directional-icon" /></button>
       <button className="carousel-arrow next icon-button" type="button" aria-label={t.next} onClick={() => api?.scrollNext()}><ArrowRight size={24} className="directional-icon" /></button>
-      <RotationButton locale={locale} paused={paused} onClick={togglePause} />
     </div>
     <div className="carousel-meter" aria-hidden="true" style={{ "--progress": (selected + 1) / strip.length } as React.CSSProperties}><bdi dir="ltr">{`${selected + 1} / ${strip.length}`}</bdi><span className="meter-line" /></div>
     <GalleryDialog locale={locale} images={strip.map(p => ({ image: p.image, title: p.title[locale] }))} index={galleryIndex} onIndexChange={setGalleryIndex} />

@@ -14,8 +14,8 @@ export function HistoryTimeline({ locale }: { locale: Locale }) {
   const select = (index: number) => { const next = (index + count) % count; setActive(next); tabs.current[next]?.focus(); };
   const forward = locale === "ar" ? "ArrowLeft" : "ArrowRight";
   const back = locale === "ar" ? "ArrowRight" : "ArrowLeft";
-  return <section id="historique" className="section history-section"><div className="container">
-    <div className="section-heading"><span className="eyebrow">{t.historyEyebrow}</span><h2>{t.historyTitle}</h2></div>
+  return <section id="historique" className="section plate history-section"><div className="container">
+    <div className="section-intro"><h2 className="title">{t.historyTitle}</h2></div>
     <div className="timeline" style={{ "--progress": count > 1 ? active / (count - 1) : 1, "--active": active } as React.CSSProperties}>
       <div className="timeline-steps" role="tablist" aria-label={t.historyTitle}>
         {t.history.map((chapter, index) => <button key={chapter.title} ref={element => { tabs.current[index] = element; }} type="button" role="tab" id={`history-tab-${index}`} aria-selected={active === index} aria-controls="history-panel" tabIndex={active === index ? 0 : -1} style={{ "--i": index } as React.CSSProperties} className={index <= active ? "reached" : undefined}

@@ -1,8 +1,9 @@
 "use client";
 
 import { useId, useState, type FormEvent } from "react";
-import { Check, Download, Mail, RotateCcw } from "lucide-react";
-import { company, governorates, messages, type Locale } from "@/lib/content";
+import { Download, Mail, MessageCircle, RotateCcw } from "lucide-react";
+import { company, governorates, messages, whatsappHref, type Locale } from "@/lib/content";
+import { RadiatorMark } from "./radiator-mark";
 import { useCatalog } from "./catalog-context";
 import { normalizeTunisianPhone } from "@/lib/inquiry";
 import { variantLabel, variantSummary } from "@/lib/products";
@@ -43,18 +44,20 @@ export function InquiryForm({ locale, initialProduct = "", initialVariant = "" }
     anchor.href = url; anchor.download = "EDDFA-demande.txt"; anchor.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
+  const whatsapp = draft ? whatsappHref(draft) : null;
   if (draft) return <div className="inquiry-success" role="status" aria-live="polite">
-    <span className="success-mark"><Check size={26} /></span><h3>{t.prepared}</h3><p>{t.draftText}</p>
+    <RadiatorMark className="success-radiator" warm={6} /><h3>{t.prepared}</h3><p>{t.draftText}</p>
     <div className="success-actions">
-      <button className="pill-button gold" type="button" onClick={download}><Download size={17} />{t.download}</button>
-      <a className="pill-button" href={`mailto:${company.email}?subject=${encodeURIComponent("EDDFA - Demande")}&body=${encodeURIComponent(draft)}`}><Mail size={17} />{t.emailDraft}</a>
+      {whatsapp && <a className="pill-button primary" href={whatsapp} target="_blank" rel="noopener noreferrer"><MessageCircle size={17} />{t.sendWhatsapp}</a>}
+      <a className={`pill-button${whatsapp ? "" : " primary"}`} href={`mailto:${company.email}?subject=${encodeURIComponent("EDDFA - Demande")}&body=${encodeURIComponent(draft)}`}><Mail size={17} />{t.emailDraft}</a>
+      <button className="pill-button" type="button" onClick={download}><Download size={17} />{t.download}</button>
     </div>
     <button className="text-button" type="button" onClick={() => setDraft(null)}><RotateCcw size={15} />{t.another}</button>
   </div>;
   return <form className="inquiry-form" onSubmit={submit}>
     <div className="form-row">
       <label htmlFor={`${id}-name`}>{t.name}<input id={`${id}-name`} name="name" autoComplete="name" required maxLength={100} onBlur={e => { e.currentTarget.value = e.currentTarget.value.replace(/\s+/g, " ").trim(); }} /></label>
-      <label htmlFor={`${id}-phone`}>{t.phone}<input id={`${id}-phone`} name="phone" autoComplete="tel" type="tel" inputMode="tel" dir="ltr" required maxLength={24} placeholder="31 547 491" onInput={e => e.currentTarget.setCustomValidity("")} /></label>
+      <label htmlFor={`${id}-phone`}>{t.phone}<input id={`${id}-phone`} name="phone" autoComplete="tel" type="tel" inputMode="tel" dir="ltr" required maxLength={24} placeholder={t.phoneHint} onInput={e => e.currentTarget.setCustomValidity("")} /></label>
     </div>
     <label htmlFor={`${id}-email`}>{t.email}<input id={`${id}-email`} name="email" autoComplete="email" type="email" dir="ltr" maxLength={254} onBlur={e => { e.currentTarget.value = e.currentTarget.value.trim().toLowerCase(); }} /></label>
     <div className="form-row">
@@ -63,6 +66,6 @@ export function InquiryForm({ locale, initialProduct = "", initialVariant = "" }
     </div>
     {currentProduct && <label htmlFor={`${id}-variant`}>{t.variant}<select id={`${id}-variant`} name="variant" dir="ltr" value={variantId} onChange={e => setVariantId(e.target.value)}><option value="">{t.chooseVariant}</option>{currentProduct.variants.map(v => <option key={v.id} value={v.id}>{variantLabel(v)}</option>)}</select></label>}
     <label htmlFor={`${id}-message`}>{t.message}<textarea id={`${id}-message`} name="message" rows={4} required minLength={5} maxLength={2000} /></label>
-    <button className="pill-button gold" type="submit">{t.submit}</button>
+    <button className="pill-button primary" type="submit">{t.submit}</button>
   </form>;
 }

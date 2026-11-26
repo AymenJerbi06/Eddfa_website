@@ -11,7 +11,7 @@ Customized October 8, 2026 using the user-supplied ../Images+Products folder. No
 | logo.ico | Branding/logo.ico | Favicon, copied unchanged. |
 | en442 | Branding/logo_euronorm_EN442_certification.png | Historical technical-document section on About only. |
 | certificat-veritas-en442.pdf | Branding/certificat_veritas_EN442.pdf | Exact, unchanged downloadable document. |
-| eden-cover | Products/EDEN/EDEN Category Cover.jpg | Hero, company/catalog/contact banners and contact image. |
+| eden-cover | Products/EDEN/EDEN Category Cover.jpg | Admin sign-in background and the start of the closer film. It was the first section's photo until 25 November 2026 (see the end of this file). |
 | eclat-cover | Products/ECLAT/ECLAT Category Cover.jpg | Dark commitment-section photo and gallery banner. |
 | eden-80, eden-100, eden-120 | Products/EDEN/EDEN 80 (13 Tubes).jpg, EDEN 100 (17 Tubes).jpg, EDEN 120 (21 Tubes).jpg | Model images. |
 | eclat-classic, eclat-confort, eclat-service | Products/ECLAT/ECLAT CLASSIC.jpg, ECLAT CONFORT.jpg, ECLAT SERVICE.jpg | Original model photos; display enlargement capped. |
@@ -73,3 +73,37 @@ At the user's request the site now shows only the AI scenes above for products, 
 page banners, and the on-page label « Mise en situation · IA » and the note lines were removed. This file remains the
 record of how each image was made. EDDFA's own photos stay in `public/eddfa` but are no longer referenced, except
 `eden-cover` (first section of the home page, kept unchanged at the user's request) and `team-straight` (the real team photo, straightened).
+
+## Films (26 November 2026, Higgsfield, Kling 3.0 pro, silent)
+
+Made at the user's request ("use Higgsfield on the entire website") from EDDFA's own scenes above, after the user
+approved the list and its cost (61.75 credits). Each film was checked frame by frame against the real radiators (tube
+groups, rails, brackets, valves with white caps). Files are in `public/eddfa/film/`; the frame sequences were cut from
+the films in the Higgsfield sandbox (WebP), the loops re-encoded in H.264 without sound.
+
+| Files in public/eddfa | Made from | Use |
+| --- | --- | --- |
+| film/story/d (72 frames, 1600 px) and film/story/m (72 upright frames for phones) | Kling 3.0 pro, 10 s: start frame a new close-up of the EDEN 80's right rail, lowest tubes and chrome valve (Nano Banana Pro, 2 credits, from scene-eden-80-detail and scene-eden-80-wide), end frame scene-eden-80-wide cut to 16:9. A slow pull-back from the valve to the whole room; checked: 3 + 3 + 7 tubes at the end, two valves with white caps. | « Nos exigences » scroll film on the home page. |
+| film/closer/d (48 frames, 1200 px) and film/closer/m (48 frames, 800 px) | Kling 3.0 pro, 8 s: start frame eden-cover (the first section's photo) cut to 16:9, darker and cooler; end frame the same photo framed closer and warmer. The lights come on and the room warms up while the camera moves in; the radiator keeps its tube groups and brackets. | The closer on every page but Contact. |
+| film/eden.webp, film/eden-720.mp4, film/eden-1080.mp4 | Kling 3.0 pro, 5 s, start and end frame scene-eden-80-wide cut to 16:9: only the light, the leaf shadows and the branches move. | EDEN card on the home page, EDEN range banner. |
+| film/eclat.webp, film/eclat-720.mp4, film/eclat-1080.mp4 | Kling 3.0 pro, 5 s, start and end frame scene-eclat-confort-wide cut to 16:9; same calm motion. | ECLAT card on the home page, ECLAT range banner. |
+| film/aluminium.webp, film/aluminium-720.mp4, film/aluminium-1080.mp4 | Kling 3.0 pro, 5 s, start and end frame a new macro of matte black aluminium tubes in low warm light (Nano Banana Pro, 2 credits, from scene-eden-80-detail); a band of light glides along the tubes. | Title bands of the inner pages, the band for installers and resellers. |
+
+The loops play muted only while on screen and stop off screen; the scroll films move only when the visitor scrolls.
+Visitors who ask for reduced motion see still pictures (the first frame, or the closer's last one).
+
+## 25 November 2026: the first section's new photo, and the same wall before and after
+
+At the user's request ("redo the first picture of the very first section, keeping the colours, the ambient and the
+same style"), made on Higgsfield with GPT Image 2.6 after the user approved the list and the model (11.75 credits for
+the four images; the first tries with Nano Banana Pro failed and cost nothing). The first section's words, button and
+layout are unchanged.
+
+| Local stem in public/eddfa | Made from | Use |
+| --- | --- | --- |
+| hero-eden | GPT Image 2.6 (3.25 credits; 3840 × 2160, saved at 3200 × 1800), made from EDDFA's eden-cover photo: the same white radiator as EDDFA's EDEN cover photo (4 + 6 + 6 tubes, brackets on the fourth tube of the top and bottom groups, chrome valves with white caps), the same marble, oak vanity, brass tap, globe pendants, pampas and lit niche, in warm morning light. The radiator hangs on the right so the words sit on the sunlit wall. Checked tube by tube against eden-cover. | First section of the home page; mirrored in Arabic, where the words sit on the right. |
+| hero-eden-alt1 | Another version from the same request (3.25 credits): the radiator on the left with a towel, the vanity on the right. Same checks. | Not displayed; kept as an alternative for the first section. |
+| hero-eden-alt2 | A third version (3.25 credits): the radiator on the left without a towel, closest to the old photo's layout. Same checks. | Not displayed; kept as an alternative for the first section. |
+| scene-eden-80-after | scene-eden-80-wide cut to 16:9 (1536 × 864). | « Le même mur. Avec un EDEN 80. » on the home page. |
+| scene-eden-80-before | GPT Image 2.6 (2 credits) from scene-eden-80-after: the same bathroom with the radiator and its towel taken away, then aligned to it point by point (feature matching and a perspective fit) so the two photos meet exactly under the handle. | « Le même mur. Avec un EDEN 80. » on the home page. |
+

@@ -12,9 +12,10 @@ import { SpecTable } from "./spec-table";
 import { useCatalog } from "./catalog-context";
 import { RangeNav } from "./range-nav";
 import { TechDrawing } from "./tech-drawing";
+import { AddToQuote } from "./basket";
 
 // The two figures a visitor compares first, read from the catalogue: heights, then heat (element power for ECLAT).
-function quickFacts(product: CatalogProduct) {
+export function quickFacts(product: CatalogProduct) {
   const span = (values: number[], unit: string) => {
     const list = values.filter(value => value > 0);
     if (!list.length) return null;
@@ -33,15 +34,8 @@ export function CatalogCard({ locale, product, level = "h2", drawn = false }: { 
   // Where the article has a second portrait photo, pointing at the card shows it; on touch screens two dots do it.
   const second = sized ? undefined : product.gallery.find(image => image !== product.image && !image.includes("-wide"));
   const [flipped, setFlipped] = useState(false);
-  // Under a mouse the card leans a few degrees toward the pointer; the light on the photo follows it.
-  const lean = (event: React.PointerEvent<HTMLElement>) => {
-    if (event.pointerType !== "mouse") return;
-    const box = event.currentTarget.getBoundingClientRect();
-    event.currentTarget.style.setProperty("--tx", ((event.clientX - box.left) / box.width - 0.5).toFixed(3));
-    event.currentTarget.style.setProperty("--ty", ((event.clientY - box.top) / box.height - 0.5).toFixed(3));
-  };
-  const rest = (event: React.PointerEvent<HTMLElement>) => { event.currentTarget.style.removeProperty("--tx"); event.currentTarget.style.removeProperty("--ty"); };
-  return <article className="catalog-item" onPointerMove={lean} onPointerLeave={rest}><Link href={`/${locale}/produits/${product.handle}`} className={`catalog-photo${sized ? " drawn" : ""}${second && flipped ? " show-second" : ""}`}>{sized ? <TechDrawing locale={locale} product={product} variant={sized} kind={installationKind(product)} /> : <Photo src={product.image} alt={product.title[locale]} />}{second && <Photo src={second} alt="" className="card-second" />}{facts && <span className="catalog-quick" dir="ltr">{facts}</span>}</Link>{second && <button type="button" className="card-flip" aria-pressed={flipped} aria-label={`${t.otherPhoto} · ${product.title[locale]}`} onClick={() => setFlipped(value => !value)}><span /><span /></button>}<div className="catalog-item-caption"><div><span className="eyebrow">{t[product.category]}</span><Heading><Link href={`/${locale}/produits/${product.handle}`}><bdi>{product.title[locale]}</bdi></Link></Heading></div><Link className="icon-button" aria-label={`${t.discover} ${product.title[locale]}`} href={`/${locale}/produits/${product.handle}`}><ChevronRight className="directional-icon" size={23} /></Link></div></article>;
+  // The two figures a visitor compares first (heights, heat) sit under the name, in the card's own text.
+  return <article className="catalog-item"><Link href={`/${locale}/produits/${product.handle}`} className={`catalog-photo${sized ? " drawn" : ""}${second && flipped ? " show-second" : ""}`} tabIndex={-1} aria-hidden="true">{sized ? <TechDrawing locale={locale} product={product} variant={sized} kind={installationKind(product)} /> : <Photo src={product.image} alt="" />}{second && <Photo src={second} alt="" className="card-second" />}</Link>{second && <button type="button" className="card-flip" aria-pressed={flipped} aria-label={`${t.otherPhoto} · ${product.title[locale]}`} onClick={() => setFlipped(value => !value)}><span /><span /></button>}<div className="catalog-item-caption"><div><span className="eyebrow">{t[product.category]}</span><Heading><Link href={`/${locale}/produits/${product.handle}`}><bdi>{product.title[locale]}</bdi></Link></Heading>{facts && <span className="catalog-quick" dir="ltr">{facts}</span>}</div><ChevronRight className="directional-icon card-arrow" size={22} aria-hidden="true" /></div></article>;
 }
 
 // The articles of a range, as photos or drawn at one scale, so their sizes can be compared at a glance.
@@ -106,18 +100,6 @@ export function ProductDetail({ locale, product }: { locale: Locale; product: Ca
   const step = (by: number) => setPhoto(index => (index + by + photos) % photos);
   // Swipe between photos on touch screens; a mostly vertical move is left to the page scroll.
   const touch = useRef<{ x: number; y: number } | null>(null);
-  // On phones, a slim quote bar slides in once the main quote button has scrolled out of view.
-  const actions = useRef<HTMLDivElement>(null);
-  const [barVisible, setBarVisible] = useState(false);
-  useEffect(() => {
-    const target = actions.current;
-    if (!target || !("IntersectionObserver" in window)) return;
-    // The observed area reaches far below the screen, so the bar shows exactly when the button is above the screen,
-    // even after a jump (an anchor link, a restored scroll position) that never passes over the button.
-    const observer = new IntersectionObserver(entries => setBarVisible(!entries[entries.length - 1].isIntersecting), { rootMargin: "0px 0px 100000px 0px" });
-    observer.observe(target);
-    return () => observer.disconnect();
-  }, []);
   const variant = product.variants.find(v => v.id === variantId) ?? product.variants[0];
   const models = family ? catalog.filter(item => item.category === product.category) : [];
   const breadcrumbs = <nav className="breadcrumbs" aria-label={locale === "ar" ? "مسار الصفحة" : "Fil d’Ariane"}>
@@ -127,7 +109,7 @@ export function ProductDetail({ locale, product }: { locale: Locale; product: Ca
   </nav>;
   const crumbRow = <div className={`crumb-row detail-crumbs${family && models.length > 1 ? " has-aside" : ""}`}>{breadcrumbs}
     {family && models.length > 1 && <RangeNav tone="light" label={`${t.modelsNav} ${family.name}`} links={models.map(item => ({ href: `/${locale}/produits/${item.handle}`, label: item.title[locale], current: item.id === product.id }))} />}</div>;
-  if (!variant) return <section className="product-detail section"><div className="container">{crumbRow}<h1>{product.title[locale]}</h1><p>{product.description[locale]}</p><QuoteLink locale={locale} query={`?ref=${product.id}`}>{t.quote}</QuoteLink></div></section>;
+  if (!variant) return <section className="product-detail section plate"><div className="container">{crumbRow}<h1>{product.title[locale]}</h1><p>{product.description[locale]}</p><QuoteLink locale={locale} query={`?ref=${product.id}`}>{t.quote}</QuoteLink></div></section>;
   // The key values of the chosen version; the full sheet sits in the first tab.
   const chips = [
     ...(variant.dimensions[0] > 0 ? [[t.dimensions, `${variant.dimensions.join(" × ")} mm`]] : []),
@@ -152,7 +134,7 @@ export function ProductDetail({ locale, product }: { locale: Locale; product: Ca
         <figcaption><span className="drawing-version" dir="ltr">{variantLabel(variant)}</span><span>H · {t.height}</span><span>L · {t.width}</span>{kind === "hydraulic" && variant.centres !== undefined && <span>E · {t.centres}</span>}<small>{t.drawingNote}</small></figcaption></figure>}
       <div className="sheet-copy">
         <p>{t.construction}{product.tubes !== undefined ? ` ${t.tubes}${locale === "fr" ? " : " : ": "}${product.tubes}.` : ""}</p>
-        <SpecTable locale={locale} rows={sheetRows} caption={`${t.technicalSheet} · ${product.title[locale]}`} />
+        <SpecTable locale={locale} rows={sheetRows} caption={`${t.technicalSheet} · ${product.title[locale]}`} selected={variant.id} onSelect={setVariantId} />
         <p className="specification-note">{t.productNote}</p>
         {product.id === "eden-100" && <a className="text-link" href="/eddfa/certificat-veritas-en442.pdf" target="_blank" rel="noopener noreferrer"><FileText size={17} /><span>{t.certificate} · {t.certificateLink}</span></a>}
       </div>
@@ -166,7 +148,7 @@ export function ProductDetail({ locale, product }: { locale: Locale; product: Ca
       : <div className="video-soon"><PlayCircle size={40} strokeWidth={1.5} /><p>{t.videoSoon}</p><a className="text-link light" href={`tel:${company.telephone}`}><Phone size={16} /><span dir="ltr">+216 {company.phone}</span></a></div> }] : []),
   ];
   return <>
-    <section className="product-detail section"><div className="container">
+    <section className="product-detail section plate"><div className="container">
       {crumbRow}
       <div className="product-detail-grid">
         <div className="detail-gallery">
@@ -199,19 +181,18 @@ export function ProductDetail({ locale, product }: { locale: Locale; product: Ca
           {product.category === "bundle" ? <div className="product-notes"><h2>{t.composition}</h2><ul>{product.bundleComponents?.map((component, index) => <li key={index}>{component.quantity} × {component.title[locale]} · <bdi>{component.version}</bdi></li>)}</ul></div>
             : chips.length > 0 && <dl className="spec-chips" key={variant.id}>{chips.map(([label, value]) => <div key={label}><dt>{label}</dt><dd dir="ltr">{value}</dd></div>)}</dl>}
           <span className="on-request">{variant.price != null ? new Intl.NumberFormat(locale === "ar" ? "ar-TN" : "fr-TN", { style: "currency", currency: "TND" }).format(variant.price) : t.onRequest}</span>
-          <div ref={actions} className="detail-actions"><QuoteLink locale={locale} query={`?ref=${variant.id}`}>{t.quote}<ChevronRight size={19} className="directional-icon" /></QuoteLink></div>
+          <div className="detail-actions"><AddToQuote key={variant.id} locale={locale} lineId={`v:${variant.id}`} /></div>
           <ul className="assurances">{assurances.map(({ icon: Icon, text }) => <li key={text}><Icon size={18} />{text}</li>)}</ul>
           <div className="detail-links">
             {sheetRows.length > 0 && <button type="button" className="text-link" onClick={() => window.print()}><Printer size={17} /><span>{t.printSheet}</span></button>}
-            {family?.sizing && <Link className="text-link gold" href={`/${locale}/produits/${family.id}#choisir`}><Calculator size={17} /><span>{t.sizingLink}</span></Link>}
+            {family?.sizing && <Link className="text-link accent" href={`/${locale}/produits/${family.id}#choisir`}><Calculator size={17} /><span>{t.sizingLink}</span></Link>}
           </div>
         </div>
       </div>
       <GalleryDialog locale={locale} images={product.gallery.map(image => ({ image, title: product.title[locale] }))} index={lightbox} onIndexChange={setLightbox} />
     </div></section>
-    <div className="detail-bar" data-show={barVisible} inert={!barVisible}><span><strong><bdi>{product.title[locale]}</bdi></strong><small dir="ltr">{variantLabel(variant)}</small></span><QuoteLink locale={locale} query={`?ref=${variant.id}`}>{t.quote}<ChevronRight size={18} className="directional-icon" /></QuoteLink></div>
-    {tabs.length > 0 && <section className="section detail-tabs-section"><div className="container"><DetailTabs locale={locale} tabs={tabs} /></div></section>}
-    {related.length > 0 && <section className="section related-section"><div className="container">
+    {tabs.length > 0 && <section className="section plate detail-tabs-section"><div className="container"><DetailTabs locale={locale} tabs={tabs} /></div></section>}
+    {related.length > 0 && <section className="section plate related-section"><div className="container">
       <div className="section-heading"><span className="eyebrow">{family ? family.kind[locale] : t.bundle}</span><h2>{t.related}</h2></div>
       <div className="catalog-grid">{related.map(item => <CatalogCard key={item.id} locale={locale} product={item} level="h3" />)}</div>
     </div></section>}

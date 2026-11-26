@@ -41,7 +41,7 @@ export default async function Page({ params, searchParams }: Props) {
   if (path === "contact") return <ContactPage locale={locale} />;
   if (path === "devis") {
     const query = await searchParams;
-    return <QuotePage locale={locale} query={{ ref: first(query.ref), gamme: first(query.gamme), qty: first(query.qty) }} />;
+    return <QuotePage locale={locale} query={{ ref: first(query.ref), gamme: first(query.gamme), qty: first(query.qty), profil: first(query.profil) }} />;
   }
   if (segments.length === 2 && segments[0] === "produits") {
     const family = familyById(segments[1]);

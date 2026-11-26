@@ -3,17 +3,19 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { ArrowUp, ChevronDown, ChevronRight, Globe2, Mail, Menu, MessageCircle, Phone, X } from "lucide-react";
+import { ArrowUp, ChevronDown, ChevronRight, ClipboardList, Globe2, Mail, MapPin, Menu, MessageCircle, Phone, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { company, families, messages, navigationHref, navPaths, type CatalogProduct, type Locale } from "@/lib/content";
+import { company, families, messages, navigationHref, navPaths, whatsappHref, type CatalogProduct, type Locale } from "@/lib/content";
 import { CatalogContext } from "./catalog-context";
 import { switchLocalePath } from "@/lib/inquiry";
 import { usePageArrival } from "./page-arrival";
+import { Emblem } from "./emblem";
+import { BasketCount } from "./basket";
 
 const quoteIndex = navPaths.indexOf("/devis");
 
 // Every quote action leads to the "Obtenir un devis" page, optionally with an article already ticked.
-export function QuoteLink({ locale, children, className = "pill-button gold", query = "" }: { locale: Locale; children: React.ReactNode; className?: string; query?: string }) {
+export function QuoteLink({ locale, children, className = "pill-button primary", query = "" }: { locale: Locale; children: React.ReactNode; className?: string; query?: string }) {
   return <Link href={`/${locale}/devis${query}`} className={className}>{children}</Link>;
 }
 
@@ -37,7 +39,7 @@ function Navigation({ locale, pathname, mobile = false, onNavigate, onReveal }: 
       onMouseLeave={event => { if (!event.currentTarget.contains(document.activeElement)) setProductsOpen(false); }}
       onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setProductsOpen(false); }}
       onKeyDown={event => { if (index === 2 && event.key === "Escape" && productsOpen) { event.preventDefault(); event.stopPropagation(); setProductsOpen(false); toggle.current?.focus(); } }}>
-      <div className="nav-link-row"><Link href={navigationHref(locale, navPaths[index])} scroll={index === 0} onClick={event => navigate(event, navPaths[index])} aria-current={pathname === `/${locale}${navPaths[index]}` ? "page" : undefined}>{label}</Link>
+      <div className="nav-link-row"><Link href={navigationHref(locale, navPaths[index])} scroll={index === 0} onClick={event => navigate(event, navPaths[index])} aria-current={pathname === `/${locale}${navPaths[index]}` ? "page" : undefined}>{label}{index === quoteIndex && <BasketCount label={t.basketLabel} />}</Link>
         {index === 2 && <button ref={toggle} type="button" className="nav-submenu-toggle" aria-label={locale === "ar" ? "قائمة المنتجات" : "Liste des produits"} aria-expanded={productsOpen} aria-controls={dropdownId} onClick={() => setProductsOpen(open => mobile ? !open : true)}><ChevronDown size={14} /></button>}
       </div>
       {index === 2 && <div id={dropdownId} className="nav-dropdown" hidden={!productsOpen}>{families.map(family => <Link key={family.id} href={`/${locale}/produits/${family.id}`} onClick={onNavigate}><bdi>{family.name}</bdi><small>{family.kind[locale]}</small></Link>)}<Link className="nav-dropdown-tool" href={`/${locale}/produits/eden#choisir`} onClick={onNavigate}>{t.sizingNav}<small>{t.sizingNavHint}</small></Link></div>}
@@ -66,6 +68,7 @@ export function SiteShell({ locale, products, adminAvailable, children }: { loca
     return () => window.removeEventListener("scroll", update);
   }, [locale]);
   const closeMenu = () => { setMenuOpen(false); pageArrival.cancel(); };
+  const whatsapp = whatsappHref();
   // Doherty threshold: a thin line answers every internal link at once, while the page itself arrives.
   const [routing, setRouting] = useState(false);
   useEffect(() => { setRouting(false); }, [pathname]);
@@ -84,27 +87,31 @@ export function SiteShell({ locale, products, adminAvailable, children }: { loca
     return () => { document.removeEventListener("click", start, true); window.clearTimeout(timer); };
   }, []);
   return <CatalogContext.Provider value={products}>
-    <div lang={locale} dir={locale === "ar" ? "rtl" : "ltr"} className="site-shell" data-page={quotePage ? "devis" : undefined}>
+    <div lang={locale} dir={locale === "ar" ? "rtl" : "ltr"} className="site-shell" data-page={quotePage ? "devis" : undefined} data-scrolled={scrolled ? "" : undefined}>
       {routing && <span className="route-progress" aria-hidden="true" />}
       <a className="skip-link" href="#main-content">{t.skip}</a>
       <header className={`site-header${!home ? " solid" : ""}${stuck ? " stuck" : ""}${menuOpen ? " menu-expanded" : ""}`} onKeyDown={event => { if (event.key === "Escape" && menuOpen) { closeMenu(); mobileToggle.current?.focus(); } }}>
         <div className="header-inner"><Brand locale={locale} /><nav className="desktop-nav" aria-label={locale === "ar" ? "القائمة الرئيسية" : "Navigation principale"}><Navigation key={pathname} locale={locale} pathname={pathname} onNavigate={closeMenu} onReveal={pageArrival.reveal} /></nav>
-          {!quotePage && <Link className="header-quote" href={`/${locale}/devis`} onClick={closeMenu}>{t.nav[5]}</Link>}
+          {!quotePage && <Link className="header-quote" href={`/${locale}/devis`} onClick={closeMenu}>{t.nav[5]}<BasketCount label={t.basketLabel} /></Link>}
           <button ref={mobileToggle} type="button" className="mobile-menu-button icon-button" aria-label={menuOpen ? t.close : t.menu} aria-expanded={menuOpen} aria-controls="mobile-navigation" onClick={() => setMenuOpen(open => !open)}>{menuOpen ? <X size={24} /> : <Menu size={24} />}</button>
         </div>
-        <nav id="mobile-navigation" className="mobile-nav" hidden={!menuOpen} aria-label={locale === "ar" ? "القائمة الرئيسية للجوال" : "Navigation mobile"}><Navigation key={pathname} locale={locale} pathname={pathname} mobile onNavigate={closeMenu} onReveal={pageArrival.reveal} /><div className="mobile-contact"><a href={`tel:${company.telephone}`}><Phone size={17} />{t.railCall}</a><a href={`mailto:${company.email}`}><Mail size={18} />{t.railMail}</a></div></nav>
+        <nav id="mobile-navigation" className="mobile-nav" hidden={!menuOpen} aria-label={locale === "ar" ? "القائمة الرئيسية للجوال" : "Navigation mobile"}><Navigation key={pathname} locale={locale} pathname={pathname} mobile onNavigate={closeMenu} onReveal={pageArrival.reveal} /><div className="mobile-contact"><a href={`tel:${company.telephone}`}><Phone size={17} />{t.railCall}</a><a href={`mailto:${company.email}`}><Mail size={18} />{t.railMail}</a>{whatsapp && <a href={whatsapp} target="_blank" rel="noopener noreferrer"><MessageCircle size={18} />{t.whatsapp}</a>}</div></nav>
       </header>
       <main id="main-content">{children}</main>
-      <footer className="site-footer">
-        <div className="container footer-grid"><div><Brand locale={locale} dark /><p>{t.footerText}</p></div>
+      <footer className="site-footer"><Emblem side="end" edge="bottom" />
+        <div className="container footer-grid"><div className="footer-brand"><Brand locale={locale} /><p>{t.footerText}</p></div>
           <div><h3>{t.quickLinks}</h3><ul>{t.nav.map((label, index) => <li key={label}><Link href={`/${locale}${navPaths[index]}`}>{label}</Link></li>)}</ul></div>
-          <div><h3>{t.nav[2]}</h3><ul>{families.map(family => <li key={family.id}><Link href={`/${locale}/produits/${family.id}`}><bdi>{family.name}</bdi> · {family.kind[locale]}</Link></li>)}<li><Link href={`/${locale}/produits/eden#choisir`}>{t.sizingNav}</Link></li></ul></div>
-          <div><h3>{t.address}</h3><a href={`tel:${company.telephone}`} dir="ltr">+216 {company.phone}</a><a className="footer-email" href={`mailto:${company.email}`}>{company.email}</a><address>{company.address}</address></div>
+          <div><h3>{t.nav[2]}</h3><ul>{families.map(family => <li key={family.id}><Link href={`/${locale}/produits/${family.id}`}><bdi>{family.name}</bdi><span> · {family.kind[locale]}</span></Link></li>)}<li><Link href={`/${locale}/produits/eden#choisir`}>{t.sizingNav}</Link></li></ul></div>
+          <div><h3>{t.address}</h3>
+            <div className="footer-contacts"><a className="contact-chip" href={`tel:${company.telephone}`}><Phone size={17} /><span dir="ltr">+216 {company.phone}</span></a><a className="contact-chip" href={`mailto:${company.email}`}><Mail size={17} /><span>{company.email}</span></a>{whatsapp && <a className="contact-chip" href={whatsapp} target="_blank" rel="noopener noreferrer"><MessageCircle size={17} /><span>{t.whatsapp}</span></a>}</div>
+            <address>{company.address}</address>
+            <a className="text-link light" href={company.directionsUrl} target="_blank" rel="noopener noreferrer"><MapPin size={16} /><span>{t.directions}</span></a></div>
         </div>
         <div className="container footer-bottom"><span>© 2026 {t.rights}</span>{(company.footerCreditApproved || process.env.NEXT_PUBLIC_EDDFA_SHOW_CREDIT === "true") && (adminAvailable ? <Link href="/admin" prefetch={false} aria-label={locale === "ar" ? "Made by Aymen · دخول الإدارة" : "Made by Aymen · Accès administration"}>Made by Aymen</Link> : <span>Made by Aymen</span>)}</div>
       </footer>
       <aside className="contact-rail" aria-label={t.contact}>
-        <Link className="rail-button rail-quote" href={`/${locale}/devis`} aria-label={t.quote} title={t.quote}><MessageCircle size={20} /><span className="rail-label">{t.nav[5]}</span></Link>
+        <Link className="rail-button rail-quote" href={`/${locale}/devis`} aria-label={t.quote} title={t.quote}><ClipboardList size={20} /><span className="rail-label">{t.nav[5]}</span><BasketCount label={t.basketLabel} /></Link>
+        {whatsapp && <a className="rail-button" href={whatsapp} target="_blank" rel="noopener noreferrer" aria-label={t.whatsapp} title={t.whatsapp}><MessageCircle size={20} /><span className="rail-label">{t.whatsapp}</span></a>}
         <a className="rail-button" href={`mailto:${company.email}`} aria-label={company.email} title={company.email}><Mail size={20} /><span className="rail-label">{t.railMail}</span></a>
         <a className="rail-button" href={`tel:${company.telephone}`} aria-label={company.phone} title={company.phone}><Phone size={18} /><span className="rail-label">{t.railCall}</span></a>
       </aside>

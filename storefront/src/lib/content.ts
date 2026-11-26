@@ -219,7 +219,16 @@ export const company = {
     { name: "LinkedIn", url: "https://www.linkedin.com/company/eddfa" },
   ],
   footerCreditApproved: true,
+  // EDDFA's WhatsApp number, international format without "+" (for example "216XXXXXXXX"). While it is null, no
+  // WhatsApp button shows anywhere; once EDDFA confirms its number, set it here and every WhatsApp action appears.
+  whatsapp: null as string | null,
 };
+
+/** A WhatsApp link that opens a chat with EDDFA, with the visitor's prepared request already written. */
+export function whatsappHref(text = "") {
+  if (!company.whatsapp) return null;
+  return `https://wa.me/${company.whatsapp}${text ? `?text=${encodeURIComponent(text)}` : ""}`;
+}
 
 export const messages = {
   fr: {
@@ -227,7 +236,7 @@ export const messages = {
     tagline: "ALUMINIUM & CONFORT",
     heroTitle: "Sèche-serviettes en aluminium.",
     heroText: "Fabriqués à Sfax. À eau chaude ou électriques, trouvez le confort qui s’accorde à votre salle de bain.",
-    contact: "Contactez-nous", quote: "Obtenir un devis", discover: "Découvrir", rangesNav: "Nos gammes", modelsNav: "Modèles de la gamme", allProjects: "Toutes les inspirations",
+    contact: "Contactez-nous", quote: "Obtenir un devis", discover: "Découvrir", rangesNav: "Nos gammes", modelsNav: "Modèles de la gamme", allProjects: "Toutes les photos",
     what: "FABRICANT TUNISIEN", aboutTitle: "Le confort commence chez nous.",
     aboutText: "Installée à Sfax, EDDFA développe et fabrique en aluminium. Sa spécialité : le sèche-serviettes, au cœur de cinq gammes pour la maison et le jardin.",
     profile: "Découvrir notre entreprise", productsEyebrow: "NOS PRODUITS", productsTitle: "Cinq gammes, un même savoir-faire.",
@@ -277,14 +286,14 @@ export const messages = {
     ],
     articlesOf: "Les articles", compareTitle: "Comparer les versions", dimensions: "Dimensions (H × L × P)", chooseModel: "Choisir mon modèle",
     soonTitle: "Fiches articles en préparation.", soonText: "Les articles de cette gamme seront bientôt présentés ici, avec leurs fiches techniques. Notre équipe vous renseigne dès maintenant.", callUs: "Appeler EDDFA",
-    sizingEyebrow: "CHOISIR SON SÈCHE-SERVIETTES", sizingTitle: "Quelle taille pour votre salle de bain ?", sizingText: "Indiquez la surface et la hauteur de votre salle de bain : nous calculons la puissance nécessaire et le modèle adapté.",
+    sizingEyebrow: "Choisir son sèche-serviettes", sizingTitle: "Quelle taille pour votre salle de bain ?", sizingText: "Indiquez la surface et la hauteur de votre salle de bain : nous calculons la puissance nécessaire et le modèle adapté.",
     surface: "Surface au sol (m²)", ceiling: "Hauteur sous plafond (m)", insulation: "Isolation de la pièce",
     insulationLevels: { good: "Bonne", average: "Moyenne", poor: "Faible" }, insulationHints: { good: "Construction récente ou isolée", average: "Le cas le plus courant", poor: "Logement ancien, murs froids" },
     surfaceRange: "Entre 1 et 60 m²", ceilingRange: "Entre 2 et 5 m",
     requiredPower: "Puissance nécessaire", volume: "Volume", recommended: "Modèle conseillé", alternatives: "Autres modèles adaptés", noneSingle: "Aucun appareil seul ne couvre ce besoin : prévoyez-en plusieurs, ou parlez-en à notre équipe.", noneAtAll: "Ce besoin dépasse nos modèles : notre équipe vous conseille.", enterValues: "Indiquez la surface de votre salle de bain pour voir le modèle conseillé.",
     viewModel: "Voir le modèle", addToQuote: "Ajouter au devis", method: "La méthode de calcul", formula: "Puissance (W) = Surface (m²) × Hauteur (m) × Coefficient (W/m³)", coefficient: "Coefficient d’isolation",
     sizingThermal: "Puissances thermiques annoncées au catalogue EDDFA. La chaleur réellement fournie dépend de la température de l’eau de votre chauffage central.", sizingElectric: "Pour un modèle électrique, la chaleur produite correspond à la puissance de sa résistance.", sizingDisclaimer: "Estimation indicative, selon les règles usuelles de dimensionnement d’une salle de bain. Pièce très exposée (grande fenêtre, murs extérieurs) : choisissez le modèle supérieur. Notre équipe confirme le choix avec vous.",
-    switchToEclat: "Pas de chauffage central ? Choisissez un modèle ECLAT.", switchToEden: "Vous avez un chauffage central ? Découvrez EDEN.", sizingLink: "Quelle taille choisir ? Calculez-la", sizingNav: "Choisir son sèche-serviettes", sizingNavHint: "Calcul de la puissance · EDEN et ECLAT", closerAlt: "Sèche-serviettes EDEN 120 noir dans une salle de bain, le soir, une serviette crème sur les tubes du haut", 
+    switchToEclat: "Pas de chauffage central ? Choisissez un modèle ECLAT.", switchToEden: "Vous avez un chauffage central ? Découvrez EDEN.", sizingLink: "Quelle taille choisir ? Calculez-la", sizingNav: "Choisir son sèche-serviettes", sizingNavHint: "Calcul de la puissance · EDEN et ECLAT", closerAlt: "Sèche-serviettes EDEN blanc dans une salle de bain en marbre, à l’heure où les lumières s’allument", 
     technicalSheet: "Fiche technique", printSheet: "Imprimer la fiche technique", allVersions: "Toutes les versions", installNotice: "Suivez toujours la notice fournie avec l’appareil.", videoTitle: "Vidéo d’installation", videoSoon: "La vidéo d’installation de ce modèle sera bientôt disponible. En attendant, notre équipe vous guide par téléphone.", related: "Dans la même gamme", documents: "Document",
     quotePageTitle: "Obtenir un devis.", quoteIntro: "Cochez les articles qui vous intéressent et indiquez les quantités. Notre équipe prépare votre devis.",
     selectArticles: "Vos articles", quantity: "Quantité", decrease: "Retirer une pièce", increase: "Ajouter une pièce", generalRequest: "Modèle à préciser avec notre équipe",
@@ -304,6 +313,22 @@ export const messages = {
     toScale: "À l’échelle", viewLabel: "Affichage des articles",
     finish: "Finition", roomAlt: "en situation dans une salle de bain", railCall: "Appeler", railMail: "Écrire", otherPhoto: "Autre photo", teamPlate: "L’équipe EDDFA", teamPlace: "Sfax, Tunisie", detailAlt: "Détail d’un sèche-serviettes EDEN noir : tubes en aluminium, robinet chromé et serviette",
     drawingNote: "Schéma indicatif, cotes en millimètres.", photo: "Photo", of: "sur",
+    phoneHint: "8 chiffres", whatsapp: "WhatsApp", sendWhatsapp: "Envoyer par WhatsApp",
+    // The home page's guide: three questions, then the advised model.
+    guideTitle: "Trouvez le vôtre.\nEn trois questions.",
+    guideText: "Trois réponses suffisent pour choisir la gamme et la taille. Notre équipe confirme ensuite le choix avec vous.",
+    guideHeating: "Avez-vous un chauffage central à eau chaude ?", guideYes: "Oui", guideNo: "Non", guideYesHint: "EDEN · à eau chaude", guideNoHint: "ECLAT · électrique",
+    guideSurface: "Quelle est la surface de la salle de bain ?", guideInsulation: "Comment est-elle isolée ?",
+    guideAssumption: "Calcul pour une hauteur sous plafond de {h} m.", guideRefine: "Affiner le calcul",
+    guideEmpty: "Votre modèle s’affiche ici.", guideEmptyHint: "Commencez par la première question.",
+    rangesTitle: "À eau chaude ou électrique.\nToujours en aluminium.", othersTitle: "Aussi chez EDDFA",
+    addedToQuote: "Ajouté au devis", viewQuote: "Voir mon devis", basketLabel: "articles dans votre devis",
+    sameWallTitle: "Le même mur.\nAvec un EDEN 80.", sameWallText: "Faites glisser la poignée : la salle de bain sans sèche-serviettes, puis avec l’EDEN 80 noir.", sameWallSlider: "Comparer la salle de bain sans et avec l’EDEN 80",
+    beforeLabel: "Sans", afterLabel: "Avec EDEN 80", beforeAlt: "La salle de bain sans sèche-serviettes, le mur en enduit beige nu", afterAlt: "La même salle de bain avec le sèche-serviettes EDEN 80 noir et une serviette blanche",
+    detailsTitle: "Regardez de près.\nChaque détail compte.", detailsText: "Choisissez un point pour découvrir l’EDEN.",
+    proTitle: "Installateurs, revendeurs.\nParlons quantités.",
+    proText: "Pour un chantier ou un point de vente, cochez vos articles et vos quantités sur la page Devis, en précisant que vous êtes professionnel. Notre équipe vous répond avec un devis détaillé.",
+    proQuote: "Demander un devis pro",
   },
   ar: {
     nav: ["الرئيسية", "تقديم الشركة", "المنتجات", "الصور", "اتصل بنا", "عرض سعر"],
@@ -367,7 +392,7 @@ export const messages = {
     requiredPower: "القدرة اللازمة", volume: "الحجم", recommended: "الطراز المقترح", alternatives: "طرازات مناسبة أخرى", noneSingle: "لا يكفي جهاز واحد لهذه الحاجة: خطّط لأكثر من جهاز، أو تحدّث مع فريقنا.", noneAtAll: "هذه الحاجة تتجاوز طرازاتنا: فريقنا ينصحك.", enterValues: "أدخل مساحة حمامك لعرض الطراز المقترح.",
     viewModel: "عرض الطراز", addToQuote: "إضافة إلى عرض السعر", method: "طريقة الحساب", formula: "القدرة (واط) = المساحة (م²) × الارتفاع (م) × المعامل (واط/م³)", coefficient: "معامل العزل",
     sizingThermal: "القدرات الحرارية المعلنة في كتالوج EDDFA. الحرارة الفعلية تتوقف على حرارة ماء التدفئة المركزية.", sizingElectric: "في الطراز الكهربائي، تساوي الحرارة المنتَجة قدرة عنصر التسخين.", sizingDisclaimer: "تقدير إرشادي وفق القواعد المعتادة لتحديد قدرة تدفئة الحمام. إذا كانت الغرفة معرّضة جداً للبرد (نافذة كبيرة أو جدران خارجية) فاختر الطراز الأعلى. فريقنا يؤكد معك الاختيار.",
-    switchToEclat: "لا تملك تدفئة مركزية؟ اختر طرازاً من ECLAT.", switchToEden: "لديك تدفئة مركزية؟ اكتشف EDEN.", sizingLink: "أي مقاس تختار؟ احسبه", sizingNav: "اختيار مجفف المناشف", sizingNavHint: "حساب القدرة · EDEN وECLAT", closerAlt: "مجفف المناشف EDEN 120 الأسود في حمام مساءً، ومنشفة بلون الكريمة على الأنابيب العلوية", 
+    switchToEclat: "لا تملك تدفئة مركزية؟ اختر طرازاً من ECLAT.", switchToEden: "لديك تدفئة مركزية؟ اكتشف EDEN.", sizingLink: "أي مقاس تختار؟ احسبه", sizingNav: "اختيار مجفف المناشف", sizingNavHint: "حساب القدرة · EDEN وECLAT", closerAlt: "مجفف المناشف EDEN الأبيض في حمّام من الرخام، لحظة إضاءة الأنوار", 
     technicalSheet: "البطاقة الفنية", printSheet: "طباعة البطاقة الفنية", allVersions: "كل الإصدارات", installNotice: "اتبع دائماً دليل الاستعمال المرفق بالجهاز.", videoTitle: "فيديو التركيب", videoSoon: "سيتوفر فيديو تركيب هذا الطراز قريباً. في الأثناء، يرشدك فريقنا عبر الهاتف.", related: "من نفس المجموعة", documents: "وثيقة",
     quotePageTitle: "الحصول على عرض سعر.", quoteIntro: "اختر المنتجات التي تهمك وحدّد الكميات، ويُعدّ فريقنا عرض السعر.",
     selectArticles: "منتجاتك", quantity: "الكمية", decrease: "إنقاص قطعة", increase: "إضافة قطعة", generalRequest: "الطراز يُحدّد مع فريقنا",
@@ -387,6 +412,21 @@ export const messages = {
     toScale: "بالمقياس نفسه", viewLabel: "طريقة عرض المنتجات",
     finish: "اللون", roomAlt: "داخل حمّام", railCall: "اتصال", railMail: "مراسلة", otherPhoto: "صورة أخرى", teamPlate: "فريق EDDFA", teamPlace: "صفاقس، تونس", detailAlt: "تفصيل من مجفف المناشف EDEN الأسود: أنابيب من الألمنيوم وصمام مطلي بالكروم ومنشفة",
     drawingNote: "رسم توضيحي، المقاسات بالمليمتر.", photo: "صورة", of: "من",
+    phoneHint: "8 أرقام", whatsapp: "واتساب", sendWhatsapp: "إرسال عبر واتساب",
+    guideTitle: "اعثر على طرازك.\nفي ثلاثة أسئلة.",
+    guideText: "ثلاث إجابات تكفي لاختيار المجموعة والمقاس، ثم يؤكد فريقنا الاختيار معك.",
+    guideHeating: "هل لديك تدفئة مركزية بالماء الساخن؟", guideYes: "نعم", guideNo: "لا", guideYesHint: "EDEN · بالماء الساخن", guideNoHint: "ECLAT · كهربائي",
+    guideSurface: "ما مساحة الحمام؟", guideInsulation: "ما مستوى عزله؟",
+    guideAssumption: "حساب على أساس ارتفاع سقف {h} م.", guideRefine: "تدقيق الحساب",
+    guideEmpty: "يظهر طرازك هنا.", guideEmptyHint: "ابدأ بالسؤال الأول.",
+    rangesTitle: "بالماء الساخن أو بالكهرباء.\nدائماً من الألمنيوم.", othersTitle: "أيضاً لدى EDDFA",
+    addedToQuote: "أُضيف إلى عرض السعر", viewQuote: "عرض طلبي", basketLabel: "منتجات في طلبك",
+    sameWallTitle: "الجدار نفسه.\nمع EDEN 80.", sameWallText: "اسحب المقبض: الحمام دون مجفف مناشف، ثم مع EDEN 80 الأسود.", sameWallSlider: "مقارنة الحمام دون EDEN 80 ومعه",
+    beforeLabel: "دون", afterLabel: "مع EDEN 80", beforeAlt: "الحمام دون مجفف مناشف، والجدار المطلي باللون البيج فارغ", afterAlt: "الحمام نفسه مع مجفف المناشف EDEN 80 الأسود ومنشفة بيضاء",
+    detailsTitle: "انظر عن قرب.\nكل تفصيل مهم.", detailsText: "اختر نقطة لتكتشف EDEN.",
+    proTitle: "مركّبون وموزّعون.\nلنتحدث عن الكميات.",
+    proText: "لورشة أو لنقطة بيع، اختر منتجاتك وكمياتها في صفحة عرض السعر مع تحديد أنك مهني. يجيبك فريقنا بعرض سعر مفصّل.",
+    proQuote: "طلب عرض سعر للمهنيين",
   },
 };
 

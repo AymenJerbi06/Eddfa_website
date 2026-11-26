@@ -1,14 +1,18 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from "react";
-import { Check, ChevronDown, Download, Mail, Minus, Plus, RotateCcw } from "lucide-react";
-import { company, governorates, messages, type Locale } from "@/lib/content";
+import { Check, ChevronDown, Download, Mail, MessageCircle, Minus, Plus, RotateCcw } from "lucide-react";
+import { company, governorates, messages, whatsappHref, type Locale } from "@/lib/content";
 import { normalizeTunisianPhone } from "@/lib/inquiry";
 import { clampQuantity, countLabel, initialSelection, maxQuantity, quoteDraft, quoteGroups, selectedLines, type QuoteQuery, type QuoteSelection } from "@/lib/quote";
+import { mergeSelections, readBasket, writeBasket } from "@/lib/basket";
 import { useCatalog } from "./catalog-context";
+import { Photo } from "./media";
+import { RadiatorMark } from "./radiator-mark";
 
 // "Obtenir un devis": tick articles, set quantities, then prepare the request. Like the contact form,
 // nothing is sent automatically in this preview: the visitor downloads the request or opens an email.
+// The page opens with the visitor's basket (what they added while exploring) and keeps it up to date.
 export function QuoteBuilder({ locale, query }: { locale: Locale; query: QuoteQuery }) {
   const t = messages[locale];
   const id = useId();
@@ -19,21 +23,29 @@ export function QuoteBuilder({ locale, query }: { locale: Locale; query: QuoteQu
     const preselected = groups.filter(group => group.lines.some(line => selection[line.id])).map(group => group.key);
     return new Set(preselected.length ? preselected : groups.slice(0, 1).map(group => group.key));
   });
-  const [customerType, setCustomerType] = useState<"individual" | "professional">("individual");
+  // Installers and resellers arrive from the home page's pro band with the professional box already chosen.
+  const [customerType, setCustomerType] = useState<"individual" | "professional">(query.profil === "pro" ? "professional" : "individual");
   const [draft, setDraft] = useState<string | null>(null);
   const [missing, setMissing] = useState(false);
   const finish = useRef<HTMLDivElement>(null);
-  const [finishVisible, setFinishVisible] = useState(true);
-  const chosen = selectedLines(groups, selection);
-  const stage = draft !== null ? 2 : chosen.length ? 1 : 0;
-
+  const [hydrated, setHydrated] = useState(false);
   useEffect(() => {
-    const node = finish.current;
-    if (!node) return;
-    const observer = new IntersectionObserver(([entry]) => setFinishVisible(entry.isIntersecting), { threshold: 0.05 });
-    observer.observe(node);
-    return () => observer.disconnect();
+    const basket = readBasket();
+    if (Object.keys(basket).length) {
+      const merged = mergeSelections(basket, initialSelection(products, groups, query));
+      const ids = new Set(groups.flatMap(group => group.lines.map(line => line.id)));
+      const known = Object.fromEntries(Object.entries(merged).filter(([lineId]) => ids.has(lineId)));
+      setSelection(known);
+      setOpen(current => new Set([...current, ...groups.filter(group => group.lines.some(line => known[line.id])).map(group => group.key)]));
+    }
+    setHydrated(true);
+    // Only once, when the page opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  useEffect(() => { if (hydrated) writeBasket(selection); }, [hydrated, selection]);
+  const chosen = selectedLines(groups, selection);
+  const whatsapp = draft ? whatsappHref(draft) : null;
+  const stage = draft !== null ? 2 : chosen.length ? 1 : 0;
 
   const update = (next: QuoteSelection) => { setSelection(next); setDraft(null); if (Object.keys(next).length) setMissing(false); };
   const toggle = (lineId: string) => { const next = { ...selection }; if (next[lineId]) delete next[lineId]; else next[lineId] = 1; update(next); };
@@ -88,6 +100,7 @@ export function QuoteBuilder({ locale, query }: { locale: Locale; query: QuoteQu
               const name = `${line.title}${line.detail ? ` · ${line.detail}` : ""}`;
               return <div key={line.id} className={`quote-line${checked ? " selected" : ""}`}>
                 <input id={inputId} type="checkbox" checked={checked} onChange={() => toggle(line.id)} />
+                <span className="quote-thumb" aria-hidden="true">{line.image ? <Photo src={line.image} alt="" sizes="64px" /> : <RadiatorMark />}</span>
                 <label htmlFor={inputId}><strong><bdi>{line.title}</bdi></strong>{line.detail && <span className="quote-detail">{line.detail}</span>}</label>
                 <div className="quantity-stepper" role="group" aria-label={`${t.quantity} · ${name}`} aria-hidden={!checked}>
                   <button type="button" className="icon-button" tabIndex={checked ? 0 : -1} aria-label={`${t.decrease} · ${name}`} disabled={!checked || quantity <= 1} onClick={() => setQuantity(line.id, quantity - 1)}><Minus size={15} /></button>
@@ -101,15 +114,16 @@ export function QuoteBuilder({ locale, query }: { locale: Locale; query: QuoteQu
       </div>
       <aside className="quote-summary" aria-label={t.selectionTitle}>
         <h2>{t.selectionTitle}</h2>
-        {chosen.length ? <><p className="quote-count" key={chosen.length}>{countLabel(chosen.length, locale)}</p><ul>{chosen.map(line => <li key={line.id}><span className="quote-qty" dir="ltr">{line.quantity} ×</span><span><bdi>{line.title}</bdi>{line.detail && <small>{line.detail}</small>}</span></li>)}</ul>{draft === null && <button type="button" className="pill-button gold" onClick={() => reveal(finish.current)}>{t.continueQuote}</button>}</> : <p>{t.emptySelection}</p>}
+        {chosen.length ? <><p className="quote-count" key={chosen.length}>{countLabel(chosen.length, locale)}</p><ul>{chosen.map(line => <li key={line.id}><span className="quote-qty" dir="ltr">{line.quantity} ×</span><span><bdi>{line.title}</bdi>{line.detail && <small>{line.detail}</small>}</span></li>)}</ul>{draft === null && <button type="button" className="pill-button primary" onClick={() => reveal(finish.current)}>{t.continueQuote}</button>}</> : <p>{t.emptySelection}</p>}
       </aside>
     </div>
     <div className="quote-finish" ref={finish}>
       {draft && <div className="inquiry-success" role="status" aria-live="polite">
-        <span className="success-mark"><Check size={26} /></span><h3>{t.quotePrepared}</h3><p>{t.quoteDraftText}</p>
+        <RadiatorMark className="success-radiator" warm={6} /><h3>{t.quotePrepared}</h3><p>{t.quoteDraftText}</p>
         <div className="success-actions">
-          <button className="pill-button gold" type="button" onClick={download}><Download size={17} />{t.download}</button>
-          <a className="pill-button" href={`mailto:${company.email}?subject=${encodeURIComponent(t.quoteSubject)}&body=${encodeURIComponent(draft)}`}><Mail size={17} />{t.emailDraft}</a>
+          {whatsapp && <a className="pill-button primary" href={whatsapp} target="_blank" rel="noopener noreferrer"><MessageCircle size={17} />{t.sendWhatsapp}</a>}
+          <a className={`pill-button${whatsapp ? "" : " primary"}`} href={`mailto:${company.email}?subject=${encodeURIComponent(t.quoteSubject)}&body=${encodeURIComponent(draft)}`}><Mail size={17} />{t.emailDraft}</a>
+          <button className="pill-button" type="button" onClick={download}><Download size={17} />{t.download}</button>
         </div>
         <button className="text-button" type="button" onClick={() => setDraft(null)}><RotateCcw size={15} />{t.editRequest}</button>
       </div>}
@@ -117,7 +131,7 @@ export function QuoteBuilder({ locale, query }: { locale: Locale; query: QuoteQu
         <h2>{t.customer}</h2>
         <div className="form-row">
           <label htmlFor={`${id}-name`}>{t.name}<input id={`${id}-name`} name="name" autoComplete="name" required maxLength={100} /></label>
-          <label htmlFor={`${id}-phone`}>{t.phone}<input id={`${id}-phone`} name="phone" autoComplete="tel" type="tel" inputMode="tel" dir="ltr" required maxLength={24} placeholder="31 547 491" onInput={event => event.currentTarget.setCustomValidity("")} /></label>
+          <label htmlFor={`${id}-phone`}>{t.phone}<input id={`${id}-phone`} name="phone" autoComplete="tel" type="tel" inputMode="tel" dir="ltr" required maxLength={24} placeholder={t.phoneHint} onInput={event => event.currentTarget.setCustomValidity("")} /></label>
         </div>
         <div className="form-row">
           <label htmlFor={`${id}-email`}>{t.email}<input id={`${id}-email`} name="email" autoComplete="email" type="email" dir="ltr" maxLength={254} /></label>
@@ -129,9 +143,8 @@ export function QuoteBuilder({ locale, query }: { locale: Locale; query: QuoteQu
         </fieldset>
         <label htmlFor={`${id}-details`}>{t.details}<textarea id={`${id}-details`} name="details" rows={3} maxLength={2000} /></label>
         {missing && <p className="form-error" role="alert">{t.selectAtLeastOne}</p>}
-        <button className="pill-button gold" type="submit">{t.submitQuote}</button>
+        <button className="pill-button primary" type="submit">{t.submitQuote}</button>
       </form>
     </div>
-    {chosen.length > 0 && !finishVisible && draft === null && <div className="quote-bar"><span>{countLabel(chosen.length, locale)}</span><button type="button" className="pill-button gold" onClick={() => reveal(finish.current)}>{t.continueQuote}</button></div>}
   </>;
 }

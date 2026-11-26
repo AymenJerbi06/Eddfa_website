@@ -3,15 +3,18 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { families, familyById, inspirations, installationGuides, installationKind, isScene, messages, navPaths, products } from "../src/lib/content";
+import { company, families, familyById, inspirations, installationGuides, installationKind, isScene, messages, navPaths, products, whatsappHref } from "../src/lib/content";
 import { formatDecimal, insulationCoefficients, recommend, requiredPower, sizingRanges } from "../src/lib/sizing";
 import { clampQuantity, countLabel, initialSelection, quoteDraft, quoteGroups, selectedLines } from "../src/lib/quote";
+import { addLine, basketSize, mergeSelections, parseBasket } from "../src/lib/basket";
 import { TechDrawing } from "../src/components/tech-drawing";
 
 const source = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8");
 
-test("the home page hero is unchanged (client request, November 2026)", () => {
-  const hero = "<section className=\"hero\"><Photo src={asset(\"eden-cover\")} alt=\"\" priority sizes=\"100vw\" className=\"hero-poster\" /><div className=\"hero-shade\" /><div className=\"container hero-content\"><h1><span className=\"hero-brand\">EDDFA</span>{t.heroTitle}</h1><p>{t.heroText}</p><Link href={`/${locale}/contact`} className=\"pill-button light\">{t.contact}</Link></div><a className=\"hero-next\" href=\"#about-eddfa\"><span>{t.what}</span><ArrowDown size={16} /></a></section>";
+// The first section's words, button and layout stay as they are (client request, November 2026); its photo was redone
+// in the same style on 25 November 2026, at the user's request.
+test("the home page hero keeps its words and layout, with its new photo", () => {
+  const hero = "<section className=\"hero\"><Photo src={asset(\"hero-eden\")} alt=\"\" priority sizes=\"100vw\" className=\"hero-poster\" /><div className=\"hero-shade\" /><div className=\"container hero-content\"><h1><span className=\"hero-brand\">EDDFA</span>{t.heroTitle}</h1><p>{t.heroText}</p><Link href={`/${locale}/contact`} className=\"pill-button light\">{t.contact}</Link></div><a className=\"hero-next\" href=\"#about-eddfa\"><span>{t.what}</span><ArrowDown size={16} /></a></section>";
   assert.ok(source("../src/components/pages.tsx").includes(hero));
   assert.deepEqual([messages.fr.heroTitle, messages.fr.heroText, messages.fr.contact, messages.fr.what], ["Sèche-serviettes en aluminium.", "Fabriqués à Sfax. À eau chaude ou électriques, trouvez le confort qui s’accorde à votre salle de bain.", "Contactez-nous", "FABRICANT TUNISIEN"]);
   assert.deepEqual([messages.ar.heroTitle, messages.ar.heroText, messages.ar.contact, messages.ar.what], ["مجففات مناشف من الألمنيوم.", "صُنعت في صفاقس. بالماء الساخن أو بالكهرباء، اختر الراحة المناسبة لحمامك.", "اتصل بنا", "صناعة تونسية"]);
@@ -23,7 +26,9 @@ test("the added stylesheets keep the site's own typefaces and palette", () => {
   const fonts = [...css.matchAll(/font-family:\s*([^;}]+)/g)].map(match => match[1].trim());
   assert.ok(fonts.every(font => ["var(--display)", "var(--font)", "inherit"].includes(font)), fonts.join(" | "));
   const colours = new Set([...css.matchAll(/#[0-9a-f]{3,8}\b/gi)].map(match => match[0].toLowerCase()));
-  const allowed = new Set(["#fff", "#ffffff", "#0f172a", "#687071", "#e6e8ea", "#141004", "#d2aa56", "#d4d6d6", "#e3bd70", "#92712d", "#9b7730", "#323838", "#2b2727", "#f3f4f3", "#f8f2e6", "#ccd0ce"]);
+  // The colours of the home page's first section, where the logo sits best: charcoal in three depths, marble white in
+  // three depths and white cards, ink and muted text, and the brass of the tap in three tones. No red but the logo's.
+  const allowed = new Set(["#232526", "#2c2f30", "#383b3c", "#fbfbfa", "#f2f1ef", "#e8e7e4", "#dcdad6", "#1f2122", "#5d6062", "#c9a96e", "#d4b57c", "#765c2f"]);
   assert.deepEqual([...colours].filter(colour => !allowed.has(colour)), []);
   const layout = source("../src/app/layout.tsx");
   assert.ok(layout.indexOf("./layers.css") > layout.indexOf("./globals.css") && layout.indexOf("./signature.css") > layout.indexOf("./layers.css"));
@@ -118,34 +123,45 @@ test("the decluttered pages keep details folded and motion optional", () => {
   assert.equal(messages.ar.progress.length, 3);
 });
 
-test("EDDFA's mark sits in two places only, and every range and model stays one tap away", () => {
-  const css = source("../src/app/layers.css");
-  const mark = css.match(/--ladder: url\("data:image\/svg\+xml,([^"]+)"\)/);
-  assert.ok(mark, "the radiator-shaped E of the logo is defined once as a mask");
-  assert.ok(!mark[1].includes("#") && !/fill='(?!black')/.test(mark[1]), "the mark takes its colour from the palette tokens, not from the drawing");
-  const uses = [...css.matchAll(/([^{}]+)\{[^}]*var\(--ladder\)/g)].map(match => match[1].trim());
-  assert.deepEqual(uses, [".commitment::before"], "only the « Nos exigences » band carries the mark (the calculator draws its own radiator)");
+test("EDDFA's mark is the radiator of its logo, and every range and model stays one tap away", () => {
+  const mark = source("../src/components/radiator-mark.tsx");
+  assert.ok(mark.includes('viewBox="0 0 164 175"') && !/fill="#|fill='#/.test(mark), "the radiator takes its colours from the place it sits in");
   const pages = source("../src/components/pages.tsx");
+  assert.ok(pages.includes('<section className={`band page-banner${film === "aluminium" ? "" : " range-banner"}`}>') && pages.includes('<FilmLoop name={film} wide className="banner-film" />'), "inner pages open on the charcoal band with a film");
+  const emblem = source("../src/components/emblem.tsx");
+  assert.ok(emblem.includes('viewBox="0 0 164 175"') && emblem.includes("const bars = [16, 31, 80, 96, 137, 153];") && !/(fill|stop-color)="#/.test(emblem), "the symbol behind the sections is the same radiator, in its ground's tints");
+  for (const [file, use] of [["showcase", '<Emblem side="start" />'], ["site-shell", '<Emblem side="end" edge="bottom" />'], ["guide", "<RadiatorMark key="], ["guide", '<Emblem side="start" />'], ["quote-builder", '<RadiatorMark className="success-radiator" warm={6} />']] as const) {
+    assert.ok(source(`../src/components/${file}.tsx`).includes(use), `${file} carries the radiator`);
+  }
+  assert.ok((pages.match(/<Emblem /g) ?? []).length >= 8, "the symbol sits behind the sections of every page");
   assert.ok(pages.includes('aside={<RangeNav tone="light" label={t.rangesNav} links={families.map(item => ({ href: `/${locale}/produits/${item.id}`'), "every range page switches between the five ranges");
   const catalog = source("../src/components/catalog.tsx");
   assert.ok(catalog.includes('<RangeNav tone="light" label={`${t.modelsNav} ${family.name}`}'), "article pages switch between the models of their range");
-  assert.ok(catalog.includes('<div className="detail-bar" data-show={barVisible} inert={!barVisible}>'), "phones get a quote bar that stays out of the tab order while hidden");
-  assert.ok(catalog.includes('rootMargin: "0px 0px 100000px 0px"'), "the bar also appears after a jump past the quote button");
   assert.match(source("../src/components/sizing-calculator.tsx"), /<WarmRadiators key=\{`\$\{best\.variant\.id\}-\$\{best\.units\}`\} units=\{best\.units\}/, "the calculator's radiator warms up again whenever the advice changes");
   assert.ok(source("../src/components/site-shell.tsx").includes('${stuck ? " stuck" : ""}'), "a compact header follows past the first screen");
+});
+
+test("phones: nothing floats over the page (the user's rule, November 2026)", () => {
+  assert.ok(!source("../src/components/catalog.tsx").includes("detail-bar"), "no quote bar over the article page");
+  assert.ok(!source("../src/components/quote-builder.tsx").includes("quote-bar"), "no bar over the quote page");
+  assert.match(source("../src/app/layers.css"), /@media \(max-width: 921px\) \{\n  \.site-header \{ position: sticky;[^}]*\}\n  \.header-inner \{ gap: 10px; \}\n  \.contact-rail \{ display: none; \}/);
 });
 
 test("the home page tells one story, each thing said once", () => {
   const pages = source("../src/components/pages.tsx");
   const home = pages.slice(pages.indexOf("export function HomePage"), pages.indexOf("// One list grouped by range"));
-  const order = ['<section className="hero">', "<FactsStrip", "<AboutSection", "<RangeShowcase", "<Exigences", 'className="section inspiration-section"', "<FaqSection", "<CallToAction"];
+  const order = ['<section className="hero">', "<AboutSection", "<ScrollStory", "<HomeGuide", "<RangeDuo", "<BeforeAfter", "<DetailSpots", 'className="section plate inspiration-section"', "<ProBand", "<FaqSection", "<CallToAction"];
   const positions = order.map(marker => home.indexOf(marker));
   assert.ok(positions.every(position => position >= 0), order.filter((_, index) => positions[index] < 0).join(", "));
   assert.deepEqual([...positions].sort((a, b) => a - b), positions, "blocks in story order");
-  assert.equal((home.match(/<Reveal>|<CallToAction|<section className="hero">/g) ?? []).length, 7);
+  assert.ok(!home.includes("<Reveal>") && !home.includes("<FactsStrip"), "sections are there from the start, and nothing glides past");
   for (const gone of ["QuoteBand", "RangeFinder", "ModelList", "trust-section", "TwoTone", "CompanyValues", "FamilyGrid", "finder-callout"]) assert.ok(!pages.includes(gone), `${gone} is gone`);
   for (const key of ["aboutTitle", "productsTitle", "commitment", "inspirationTitle", "sizingTitle", "infoTitle", "startTitle", "faqTitle"] as const) {
     assert.ok(!messages.fr[key].includes("\n") && !messages.ar[key].includes("\n"), `${key} is one calm line`);
+  }
+  for (const key of ["guideTitle", "rangesTitle", "proTitle", "cta"] as const) {
+    assert.equal(messages.fr[key].split("\n").length, 2, `${key}: a statement, then its answer`);
+    assert.equal(messages.ar[key].split("\n").length, 2, `${key} (ar): a statement, then its answer`);
   }
   for (const locale of ["fr", "ar"] as const) {
     const t = messages[locale];
@@ -180,33 +196,131 @@ test("the technical drawing shows the chosen version's real dimensions at one sc
 
 test("EDDFA's own look (Aluminium & Confort), nothing borrowed", () => {
   const css = source("../src/app/layers.css") + source("../src/app/signature.css");
-  assert.doesNotMatch(css, /\b\d+px \d+px 0 var\(--(?:dark|gold|gold-deep)\)/, "no hard offset shadows taken from the user's other sites");
-  assert.ok(!css.includes("--ink-line") && !css.includes("rotate(-2deg)"), "no ink outlines and no tilted sticky notes");
-  assert.match(css, /\.section-heading h2, [^{]*\{ font-family: var\(--font\); font-weight: 500;/, "headlines in EDDFA's own Montserrat, light and large");
-  assert.match(css, /--rungs: url\("data:image\/svg\+xml,/, "the label mark is drawn from the rungs of EDDFA's logo");
-  assert.match(css, /\.eyebrow::before \{ content: ""; flex-shrink: 0; width: 18px; height: 16px; background: var\(--gold\); -webkit-mask: var\(--rungs\)/);
-  assert.match(css, /\.showcase-section, \.faq-section, [^{]*\{ background: var\(--brushed\); \}/, "brushed-aluminium surfaces between white and dark");
+  assert.doesNotMatch(css, /\b\d+px \d+px 0 var\(--(?:dark|brass|brass-deep|graphite|ink)\)/, "no hard offset shadows taken from the user's other sites");
+  assert.ok(!css.includes("--ink-line") && !css.includes("rotate(-2deg)") && !css.includes("backdrop-filter: blur(18px)"), "no ink outlines, no tilted notes, no frosted cards");
+  assert.match(css, /\.title \.soft \{ display: block; color: var\(--muted\); font-weight: 300; \}/, "titles: a statement, then its answer in a lighter weight");
+  assert.ok(!/Karla|Bricolage/.test(css), "one typeface, Montserrat");
+  const layout = source("../src/app/layout.tsx");
+  assert.ok(!layout.includes("bricolage") && layout.includes("@fontsource-variable/karla"), "Karla stays only for the first section's own button");
+  for (const selector of [".plate", ".about-section", ".guide-section", ".inspiration-section", ".faq-section"]) {
+    assert.match(css, new RegExp(`\\${selector} \\{[^}]*background: var\\(--marble\\)`), `${selector} sits on the marble ground`);
+  }
+  for (const dark of [".band", ".ranges-section", ".pro-section", ".commitment", ".call-to-action", ".site-footer"]) assert.match(css, new RegExp(`\\${dark} \\{[^}]*background: var\\(--graphite\\)`), `${dark} is charcoal`);
+  assert.ok(css.includes(".site-shell main { background: var(--graphite); }") && css.includes("main > :not(.band) + .plate { margin-top: var(--inset); }"), "the page is charcoal, and two plates never touch");
+  assert.ok(!/#e[0-9a-f]1c2[0-9a-f]|#f01d27|:\s*red\b/i.test(css), "no red outside the logo");
   const pages = source("../src/components/pages.tsx");
-  assert.ok(pages.includes('<figure className="cta-photo"><div className="cta-photo-frame"><Photo src={asset("closer-eden")} alt={t.closerAlt}'), "the closer shows the EDEN 120 scene");
+  assert.ok(pages.includes('<figure className="cta-film"><ScrubFilm name="closer" alt={t.closerAlt} /></figure>'), "the closer shows the first section's bathroom, filmed");
 });
 
-test("second start: sections that answer the visitor, with real figures only and motion that can be switched off", () => {
+test("the sections take turns, plate then band, so each one clearly starts and ends (the user's request, 25 November 2026)", () => {
+  const files: Record<string, string> = { AboutSection: "pages", ScrollStory: "scroll-story", HomeGuide: "guide", RangeDuo: "showcase", BeforeAfter: "compare", DetailSpots: "details", ProBand: "pages", FaqSection: "pages", CallToAction: "pages" };
+  const kind = (marker: string) => {
+    if (marker.startsWith("className=")) return marker.includes(" plate ") ? "plate" : "band";
+    const text = source(`../src/components/${files[marker]}.tsx`);
+    const start = text.indexOf(`function ${marker}`);
+    const section = text.slice(start, text.indexOf("<section", start) + 140);
+    return /className="[^"]*\bplate\b/.test(section) ? "plate" : /className="[^"]*\bband\b/.test(section) ? "band" : "?";
+  };
+  const home = ["AboutSection", "ScrollStory", "HomeGuide", "RangeDuo", "BeforeAfter", "DetailSpots", 'className="section plate inspiration-section"', "ProBand", "FaqSection", "CallToAction"];
+  assert.deepEqual(home.map(kind), ["plate", "band", "plate", "band", "plate", "band", "plate", "band", "plate", "band"]);
+});
+
+test("Higgsfield films: made from EDDFA's scenes, recorded, light to load, still for reduced motion", () => {
+  const film = source("../src/components/film.tsx");
+  assert.ok(film.includes("IntersectionObserver") && film.includes("prefers-reduced-motion") && film.includes('preload="none"') && film.includes("muted loop playsInline"), "loops play only on screen, never for reduced motion");
+  assert.ok(film.includes('export const sequences: Record<SequenceName, number> = { story: 72, closer: 48 };'));
+  const provenance = source("../ASSET-PROVENANCE.md");
+  for (const name of ["film/story", "film/closer", "film/eden", "film/eclat", "film/aluminium"]) assert.ok(provenance.includes(name), `${name} is recorded in ASSET-PROVENANCE.md`);
+  const root = new URL("../public/eddfa/film/", import.meta.url);
+  for (const name of ["eden", "eclat", "aluminium"]) for (const file of [`${name}.webp`, `${name}-720.mp4`, `${name}-1080.mp4`]) assert.ok(existsSync(new URL(file, root)), file);
+  for (const [name, count] of [["story", 72], ["closer", 48]] as const) for (const size of ["d", "m"]) for (const index of [1, count]) assert.ok(existsSync(new URL(`${name}/${size}/${String(index).padStart(3, "0")}.webp`, root)), `${name}/${size}/${index}`);
+});
+
+test("the quote basket: added while exploring, kept in the browser, opened on the quote page (25 November 2026)", () => {
+  assert.deepEqual(parseBasket('{"v:eden-80-475":2,"f:eole":1}'), { "v:eden-80-475": 2, "f:eole": 1 });
+  assert.deepEqual(parseBasket('{"x:bad":1,"v:eden-80-475":-3,"v:ok-1":"2","p:eden-80":500}'), { "p:eden-80": 99 }, "junk is dropped and quantities stay within limits");
+  assert.deepEqual(parseBasket("not json"), {});
+  assert.deepEqual(addLine({ "v:eden-80-475": 1 }, "v:eden-80-475", 2), { "v:eden-80-475": 3 });
+  assert.deepEqual(mergeSelections({ "v:a": 1, "v:b": 2 }, { "v:b": 5 }), { "v:a": 1, "v:b": 5 }, "a link's quantity wins");
+  assert.equal(basketSize({ "v:a": 1, "v:b": 2 }), 2);
+  for (const [file, use] of [["catalog", "<AddToQuote key={variant.id} locale={locale} lineId={`v:${variant.id}`} />"], ["guide", "<AddToQuote key="], ["sizing-calculator", "<AddToQuote key="], ["quick-view", "<AddToQuote locale={locale} lineId={`v:${variant.id}`} />"], ["site-shell", "<BasketCount label={t.basketLabel} />"], ["quote-builder", "writeBasket(selection)"]] as const) {
+    assert.ok(source(`../src/components/${file}.tsx`).includes(use), `${file}: ${use}`);
+  }
+  for (const locale of ["fr", "ar"] as const) assert.ok(messages[locale].addedToQuote && messages[locale].viewQuote && messages[locale].basketLabel);
+});
+
+test("exploring: a quick view on every model chip, the same wall before and after, the EDEN up close", () => {
+  assert.ok(source("../src/components/showcase.tsx").includes("<ModelChips locale={locale}"), "the range cards open their models in a quick view");
+  const compare = source("../src/components/compare.tsx");
+  assert.ok(compare.includes('asset("scene-eden-80-before")') && compare.includes('asset("scene-eden-80-after")') && compare.includes('type="range"'), "the comparison can also be moved from the keyboard");
+  const details = source("../src/components/details.tsx");
+  assert.ok(details.includes("eden.highlights[4][locale]") && details.includes("t.principles[0].text"), "the four points speak in EDDFA's own words");
+  for (const locale of ["fr", "ar"] as const) for (const key of ["sameWallTitle", "detailsTitle"] as const) assert.equal(messages[locale][key].split("\n").length, 2, `${locale} ${key}`);
+  const globals = source("../src/app/globals.css");
+  assert.ok(globals.includes(".hero-next::after") && globals.includes("@keyframes cue-light") && globals.includes(".site-shell[data-scrolled] .hero-next"), "the first section's cue invites the scroll and fades once it is done");
+});
+
+// The user, 25 November 2026 (evening): no more sections, none removed; the pieces already there answer the visitor more.
+test("the existing pieces answer the visitor: range previews, the flight to « Devis », the close-up, the film's steps, the sheet's rows", () => {
+  const quick = source("../src/components/quick-view.tsx");
+  assert.ok(quick.includes("export function RangeCardShell") && quick.includes("export function RangePreview") && quick.includes('if (event.pointerType === "mouse") preview?.(product);'), "pointing at a model's chip shows it in the card");
   const showcase = source("../src/components/showcase.tsx");
-  assert.ok(showcase.includes("families.map((family, index) => <button"), "the range stage lists the five ranges in the client's order");
-  assert.ok(showcase.includes("inert={!shown}"), "hidden ranges stay out of the tab order");
-  assert.ok(showcase.includes("{family.sizing && <Link"), "the sizing tool is offered on EDEN and ECLAT only");
-  assert.ok(showcase.includes('window.matchMedia("(prefers-reduced-motion: reduce)")'), "no rotation for visitors who ask for reduced motion");
+  assert.ok(showcase.includes("<RangeCardShell key={family.id}") && showcase.includes("<RangePreview locale={locale} />") && showcase.includes("<ModelChips locale={locale}"), "both range cards carry the preview and the chips");
+  const basket = source("../src/components/basket.tsx");
+  assert.ok(basket.includes("flyToQuote(event.currentTarget)") && basket.includes('matchMedia("(prefers-reduced-motion: reduce)")'), "the article travels to « Devis », except for reduced motion");
+  const details = source("../src/components/details.tsx");
+  assert.ok(details.includes('"--zoom": scale') && details.includes("place(spot.x, focus.x)") && details.includes("setNear(true)"), "the photo moves in on the chosen point only once the visitor picks one");
+  const story = source("../src/components/scroll-story.tsx");
+  assert.ok(story.includes('className="story-steps"') && story.includes("onClick={() => go(index)}"), "the film's three requirements can be reached directly");
+  assert.ok(source("../src/components/catalog.tsx").includes("selected={variant.id} onSelect={setVariantId}"), "a row of the sheet chooses the version");
+  assert.ok(source("../src/components/galleries.tsx").includes('event.key !== "ArrowLeft" && event.key !== "ArrowRight"'), "the photo strip follows the arrow keys");
+  const pages = source("../src/components/pages.tsx");
+  const home = pages.slice(pages.indexOf("export function HomePage"), pages.indexOf("// One list grouped by range"));
+  const parts = [...home.matchAll(/^    <(\w+)[ >]/gm)].map(match => match[1]);
+  assert.deepEqual(parts, ["section", "AboutSection", "ScrollStory", "HomeGuide", "RangeDuo", "BeforeAfter", "DetailSpots", "section", "ProBand", "FaqSection", "CallToAction"], "no section added or removed");
+});
+
+test("nothing turns, glides or counts by itself; each requirement shows one of EDDFA's own facts", () => {
+  const showcase = source("../src/components/showcase.tsx");
+  assert.ok(!/setTimeout|setInterval|useAutoCycle/.test(showcase), "the ranges and the requirements stay still");
   assert.ok(showcase.includes("const principleFacts = [0, 2, 3];"), "each requirement shows one of EDDFA's own facts");
+  assert.ok(showcase.includes("main.map(family =>") && showcase.includes("families.filter(family => family.sizing)"), "EDEN and ECLAT side by side, from the client's list");
+  const galleries = source("../src/components/galleries.tsx");
+  assert.ok(!galleries.includes("Autoplay") && galleries.includes('<div className="project-carousel filmstrip"'), "the photo strip moves only when the visitor moves it");
+  const css = source("../src/app/layers.css") + source("../src/app/signature.css");
+  assert.ok(!/@keyframes marquee|animation-timeline/.test(css), "no gliding strip and no photos drifting with the scroll");
   for (const locale of ["fr", "ar"] as const) {
     assert.equal(messages[locale].facts.length, 4);
     assert.deepEqual([0, 2, 3].map(index => messages[locale].facts[index].value.replace(/\s/g, " ").replace("صفاقس", "Sfax")), ["100 %", "EN 442", "Sfax"]);
   }
-  const css = source("../src/app/signature.css");
-  assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{\n  \.marquee-track \{[^}]*animation: none;/);
-  assert.match(css, /@supports \(animation-timeline: view\(\)\)/, "scroll-tied drift only where the browser supports it");
   const catalog = source("../src/components/catalog.tsx");
   assert.ok(catalog.includes('product.category === "eclat" ? variant.resistance ?? 0 : variant.thermalPower'), "card figures: element power for ECLAT, announced output for EDEN");
-  assert.ok(source("../src/components/galleries.tsx").includes('<div className="project-carousel filmstrip"'));
+});
+
+test("the home guide: central heating decides the range, the room decides the size, with the calculator's formula", () => {
+  const guide = source("../src/components/guide.tsx");
+  assert.ok(guide.includes("requiredPower(surface, ceiling, insulation)") && guide.includes("recommend(catalog.filter(product => product.category === family.id), family.sizing, power)"), "the same formula and choice as « Choisir son sèche-serviettes »");
+  assert.ok(guide.includes('window.sessionStorage.setItem("eddfa-room"') && source("../src/components/sizing-calculator.tsx").includes('window.sessionStorage.getItem("eddfa-room")'), "the room carries over to the calculator");
+  assert.ok(guide.includes("<AddToQuote key={`${best.variant.id}-${best.units}`} locale={locale} lineId={`v:${best.variant.id}`} quantity={best.units} />"), "the advice goes into the quote, with its quantity");
+  const eden = products.filter(product => product.category === "eden");
+  assert.equal(recommend(eden, "thermal", 650).best?.variant.id, "eden-120-525", "a 5 m² bathroom, average insulation, 2.6 m: EDEN 120");
+  for (const locale of ["fr", "ar"] as const) assert.ok(messages[locale].guideAssumption.includes("{h}"));
+});
+
+test("contact and quote: EDDFA's number is never the example, WhatsApp appears only once EDDFA confirms its number", () => {
+  for (const file of ["inquiry-form", "quote-builder"]) assert.ok(!source(`../src/components/${file}.tsx`).includes('placeholder="31 547 491"'), `${file}: neutral example`);
+  assert.equal(company.whatsapp, null);
+  assert.equal(whatsappHref("x"), null);
+  company.whatsapp = "21600000000";
+  assert.equal(whatsappHref("2 × EDEN 80"), "https://wa.me/21600000000?text=2%20%C3%97%20EDEN%2080");
+  company.whatsapp = null;
+  assert.ok(source("../src/components/quote-builder.tsx").includes('query.profil === "pro" ? "professional" : "individual"'), "installers arrive with the professional box chosen");
+  const pages = source("../src/components/pages.tsx");
+  const contact = pages.slice(pages.indexOf("export function ContactPage"), pages.indexOf("export function QuotePage"));
+  assert.ok(!contact.includes("<CallToAction"), "the contact page ends with its form");
+  const shell = source("../src/components/site-shell.tsx");
+  assert.ok(shell.includes("<bdi>{family.name}</bdi><span> · {family.kind[locale]}</span>"), "the footer keeps the space before the dot on phones");
+  assert.ok(shell.includes('<ClipboardList size={20} /><span className="rail-label">{t.nav[5]}</span>'), "the quote button shows a quote, not a chat bubble");
 });
 
 // The user's decision of 14 November 2026 (night): the product, range and gallery photos are the new bathroom scenes
@@ -225,6 +339,10 @@ test("photos: products, ranges and galleries show the new scenes only, each reco
   }
   for (const file of ["catalog", "galleries", "showcase", "pages", "sizing-calculator"]) assert.ok(!source(`../src/components/${file}.tsx`).includes("scene-chip"), `${file}: no label on the photos`);
   const pages = source("../src/components/pages.tsx");
-  assert.ok(pages.includes('<section className="hero"><Photo src={asset("eden-cover")}'), "the first section keeps its own photo");
+  assert.ok(pages.includes('<section className="hero"><Photo src={asset("hero-eden")}'), "the first section shows its new photo");
+  for (const name of ["hero-eden", "hero-eden-alt1", "hero-eden-alt2", "scene-eden-80-before", "scene-eden-80-after"]) {
+    assert.ok(provenance.includes(`| ${name} |`), `${name} is recorded in ASSET-PROVENANCE.md`);
+    assert.ok(existsSync(new URL(`../public/eddfa/${name}.optimized.webp`, import.meta.url)), `${name} is in public/eddfa`);
+  }
   assert.ok(pages.includes('<Photo src={asset("team-straight")}'), "the team photo is EDDFA's real one, straightened");
 });
