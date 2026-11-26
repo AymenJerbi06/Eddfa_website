@@ -152,7 +152,8 @@ main > .plate:first-child { margin-top: calc(80px + var(--inset)); }
 .page-banner .film-loop { position: absolute; inset: 0; z-index: -2; object-position: 50% 28%; }
 .film-eclat, .page-banner .film-eclat { object-position: 66% 28%; }
 .banner-shade { position: absolute; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgb(35 37 38 / 72%) 0%, rgb(35 37 38 / 30%) 40%, rgb(35 37 38 / 88%) 100%); }
-.range-banner .banner-shade { background: linear-gradient(180deg, rgb(35 37 38 / 62%) 0%, rgb(35 37 38 / 0%) 38%, rgb(35 37 38 / 20%) 60%, rgb(35 37 38 / 90%) 100%); }
+.range-banner .banner-shade { background: linear-gradient(90deg, rgb(35 37 38 / 58%) 0%, rgb(35 37 38 / 0%) 52%), linear-gradient(180deg, rgb(35 37 38 / 62%) 0%, rgb(35 37 38 / 0%) 38%, rgb(35 37 38 / 20%) 60%, rgb(35 37 38 / 90%) 100%); }
+[dir="rtl"] .range-banner .banner-shade { background: linear-gradient(270deg, rgb(35 37 38 / 58%) 0%, rgb(35 37 38 / 0%) 52%), linear-gradient(180deg, rgb(35 37 38 / 62%) 0%, rgb(35 37 38 / 0%) 38%, rgb(35 37 38 / 20%) 60%, rgb(35 37 38 / 90%) 100%); }
 .page-banner .title { max-width: 16ch; margin: 0; color: var(--on-dark); font-size: clamp(40px, 3.4vw + 14px, 76px); }
 .page-banner .title .soft { color: rgb(242 241 239 / 78%); }
 .crumb-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 28px; padding-block: 14px; }
