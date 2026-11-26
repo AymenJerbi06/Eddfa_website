@@ -307,6 +307,25 @@ test("the home guide: central heating decides the range, the room decides the si
   for (const locale of ["fr", "ar"] as const) assert.ok(messages[locale].guideAssumption.includes("{h}"));
 });
 
+// The user, 25 November 2026 (late): the guide walks the visitor through one question at a time, like the booking on
+// Rayda's site, and the close-up's points show their words in view on phones.
+test("the guide asks one question at a time; on phones the close-up's card and the sheet read without scrolling sideways", () => {
+  const guide = source("../src/components/guide.tsx");
+  assert.ok(guide.includes("const RESULT = 3;") && guide.includes("{step === 0 && <fieldset") && guide.includes("{step === 1 && <fieldset") && guide.includes("{step === 2 && <fieldset") && guide.includes("{step === RESULT && <div className=\"guide-result\">"), "one question per step, then the answer");
+  assert.ok(guide.includes("<form key={step}") && guide.includes("onClick={() => go(step - 1)}") && guide.includes("onClick={() => go(n)}"), "the next question takes the place of the last; « Retour » and the answers so far go back");
+  assert.ok(guide.includes("if (step === 0 && !range) { setMissing(true); return; }"), "« Continuer » asks for an answer first");
+  for (const locale of ["fr", "ar"] as const) {
+    const t = messages[locale];
+    assert.equal(t.guideSteps.length, 3);
+    assert.ok(t.guideProgress.includes("{n}") && t.guideContinue && t.guideBack && t.guideShow && t.guideRestart && t.guideChange && t.guidePick && t.guideResult);
+  }
+  const details = source("../src/components/details.tsx");
+  assert.ok(details.includes('className="details-card"') && details.includes("onClick={() => step(1)}") && details.includes('scrollIntoView({ block: "nearest"'), "on phones a tapped point shows its words right under the photo");
+  assert.ok(source("../src/components/spec-table.tsx").includes("data-label={column.label}"), "on phones each version of the sheet is a card with its values named");
+  const css = source("../src/app/signature.css");
+  assert.ok(css.includes(".guide-step.from-next") && css.includes(".details-card { grid-area: card;"), "the steps slide in; the card has its place on phones");
+});
+
 test("contact and quote: EDDFA's number is never the example, WhatsApp appears only once EDDFA confirms its number", () => {
   for (const file of ["inquiry-form", "quote-builder"]) assert.ok(!source(`../src/components/${file}.tsx`).includes('placeholder="31 547 491"'), `${file}: neutral example`);
   assert.equal(company.whatsapp, null);

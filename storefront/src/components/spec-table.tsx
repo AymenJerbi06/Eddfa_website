@@ -21,7 +21,7 @@ export function SpecTable({ locale, rows, linkModels = false, caption, selected,
     <thead><tr>{showModel && <th scope="col">{t.product}</th>}{columns.map(column => <th key={column.label} scope="col">{column.label}</th>)}</tr></thead>
     <tbody>{rows.map(({ product, variant }) => <tr key={variant.id} className={choosing && selected === variant.id ? "selected" : undefined} onClick={choosing ? () => onSelect?.(variant.id) : undefined}>
       {showModel && <th scope="row">{linkModels ? <Link href={`/${locale}/produits/${product.handle}`}><bdi>{product.title[locale]}</bdi></Link> : <bdi>{product.title[locale]}</bdi>}</th>}
-      {columns.map((column, index) => <td key={column.label} dir="ltr">{choosing && index === 0
+      {columns.map((column, index) => <td key={column.label} data-label={column.label} dir="ltr">{choosing && index === 0
         ? <button type="button" className="spec-pick" aria-pressed={selected === variant.id} onClick={event => { event.stopPropagation(); onSelect?.(variant.id); }}>{column.value(variant)}</button>
         : column.value(variant)}</td>)}
     </tr>)}</tbody>
