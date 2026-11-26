@@ -94,15 +94,28 @@ address { font-style: normal; }
 .hero-next:hover { color: #f0d28e; }
 /* The cue at the bottom of the first section asks for the scroll (client request, 25 November 2026): « Fabricant
    tunisien » over a thin rail where a light runs down, like the light along the aluminium tubes, and an arrow that
-   nods. It fades as soon as the visitor scrolls; it stays still for visitors who ask for less motion. */
-.hero-next { flex-direction: column; gap: 12px; bottom: 22px; letter-spacing: 0.16em; animation: cue-in 0.9s cubic-bezier(0.22, 0.68, 0.2, 1) 0.9s backwards; transition: opacity 0.4s, translate 0.4s; }
-.hero-next svg { order: 2; animation: cue-arrow 2.4s ease-in-out 1.8s infinite; }
-.hero-next::after { content: ""; order: 1; width: 2px; height: 46px; border-radius: 2px; background: linear-gradient(180deg, transparent, var(--brass-light, #d4b57c) 50%, transparent) 0 -200% / 2px 40% no-repeat, rgb(255 255 255 / 28%); animation: cue-light 2.4s cubic-bezier(0.65, 0.05, 0.35, 1) 1.8s infinite; }
-.site-shell[data-scrolled] .hero-next { opacity: 0; translate: 0 10px; pointer-events: none; }
+   nods in a thin ring. It answers the visitor (the user, 25 November 2026, night; components/hero-next.tsx): pointing
+   at it or focusing it warms the ring to brass and stretches the rail towards it, pressing it sinks the ring, and a
+   click glides the page to the next section. As the page scrolls, the light fills the rail (--cue, 0 to 1), the ring
+   follows it down and the cue fades; it comes back when the visitor scrolls back up. It appears once the opening
+   curtain has lifted, and stays still for visitors who ask for less motion. */
+.hero-next { --cue: 0; flex-direction: column; gap: 10px; bottom: 20px; width: max-content; margin-inline: auto; letter-spacing: 0.16em; opacity: clamp(0, (1 - var(--cue)) * 1.8, 1); animation: cue-in 0.9s cubic-bezier(0.22, 0.68, 0.2, 1) 1.7s backwards; transition: color 0.3s; }
+.hero-next[data-gone] { visibility: hidden; pointer-events: none; }
+.hero-next::after { content: ""; order: 1; width: 2px; height: 46px; border-radius: 2px; transform-origin: 50% 0; background: linear-gradient(180deg, transparent, var(--brass-light, #d4b57c) 50%, transparent) 0 -200% / 2px 40% no-repeat, linear-gradient(var(--brass-light, #d4b57c), var(--brass-light, #d4b57c)) 0 0 / 2px calc(var(--cue) * 100%) no-repeat, rgb(255 255 255 / 28%); transition: scale 0.45s cubic-bezier(0.22, 0.68, 0.2, 1); animation: cue-light 2.4s cubic-bezier(0.65, 0.05, 0.35, 1) 2.6s infinite; }
+.cue-ring { order: 2; display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid rgb(255 255 255 / 42%); border-radius: 50%; transform: translateY(calc(var(--cue) * 18px)); transition: background-color 0.3s, border-color 0.3s, color 0.3s, box-shadow 0.3s, scale 0.18s, translate 0.45s cubic-bezier(0.22, 0.68, 0.2, 1); }
+.cue-ring svg { animation: cue-arrow 2.4s ease-in-out 2.6s infinite; }
+.hero-next:focus-visible { outline: none; color: #f0d28e; }
+.hero-next:focus-visible .cue-ring { box-shadow: 0 0 0 3px rgb(240 210 142 / 45%); }
+.hero-next:focus-visible .cue-ring, .hero-next:active .cue-ring { border-color: #f0d28e; background: #f0d28e; color: var(--graphite); }
+.hero-next:active .cue-ring { scale: 0.86; }
+@media (hover: hover) {
+  .hero-next:hover::after { scale: 1 1.3; }
+  .hero-next:hover .cue-ring { translate: 0 8px; border-color: #f0d28e; background: #f0d28e; color: var(--graphite); }
+}
 @keyframes cue-in { from { opacity: 0; translate: 0 14px; } }
-@keyframes cue-light { from { background-position: 0 -200%, 0 0; } 75%, to { background-position: 0 300%, 0 0; } }
-@keyframes cue-arrow { 0%, 100% { translate: 0 0; } 50% { translate: 0 5px; } }
-@media (prefers-reduced-motion: reduce) { .hero-next, .hero-next svg, .hero-next::after { animation: none; } }
+@keyframes cue-light { from { background-position: 0 -200%, 0 0, 0 0; } 75%, to { background-position: 0 300%, 0 0, 0 0; } }
+@keyframes cue-arrow { 0%, 100% { translate: 0 0; } 50% { translate: 0 4px; } }
+@media (prefers-reduced-motion: reduce) { .hero-next, .cue-ring svg, .hero-next::after { animation: none; } }
 /* The first section's photo, redone on 25 November 2026 in the same marble, wood and brass: the EDEN hangs on the
    right, the text sits on the sunlit wall. In Arabic the text sits on the right, so the photo is mirrored. */
 .hero-poster { object-position: 85% center; }
@@ -323,8 +336,9 @@ address { font-style: normal; }
   .hero h1 { font-size: 32px; max-width: 440px; margin-bottom: 12px; }
   .hero-content p { font-size: 15px; max-width: 400px; margin-bottom: 28px; }
   .hero-next { min-height: 44px; bottom: 8px; inset-inline: 76px; text-align: center; }
-  .hero-next { gap: 8px; bottom: 10px; }
-  .hero-next::after { height: 30px; }
+  .hero-next { gap: 6px; bottom: 10px; }
+  .hero-next::after { height: 22px; }
+  .cue-ring { width: 30px; height: 30px; transform: translateY(calc(var(--cue) * 12px)); }
   .hero-poster { object-position: 94% center; }
   .about-grid, .commitment-grid, .product-detail-grid, .contact-grid { grid-template-columns: 1fr; gap: 32px; }
   .about-photo { height: auto; aspect-ratio: 1.08; border-radius: 16px; }

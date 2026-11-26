@@ -14,7 +14,7 @@ const source = (path: string) => readFileSync(new URL(path, import.meta.url), "u
 // The first section's words, button and layout stay as they are (client request, November 2026); its photo was redone
 // in the same style on 25 November 2026, at the user's request.
 test("the home page hero keeps its words and layout, with its new photo", () => {
-  const hero = "<section className=\"hero\"><Photo src={asset(\"hero-eden\")} alt=\"\" priority sizes=\"100vw\" className=\"hero-poster\" /><div className=\"hero-shade\" /><div className=\"container hero-content\"><h1><span className=\"hero-brand\">EDDFA</span>{t.heroTitle}</h1><p>{t.heroText}</p><Link href={`/${locale}/contact`} className=\"pill-button light\">{t.contact}</Link></div><a className=\"hero-next\" href=\"#about-eddfa\"><span>{t.what}</span><ArrowDown size={16} /></a></section>";
+  const hero = "<section className=\"hero\"><Photo src={asset(\"hero-eden\")} alt=\"\" priority sizes=\"100vw\" className=\"hero-poster\" /><div className=\"hero-shade\" /><div className=\"container hero-content\"><h1><span className=\"hero-brand\">EDDFA</span>{t.heroTitle}</h1><p>{t.heroText}</p><Link href={`/${locale}/contact`} className=\"pill-button light\">{t.contact}</Link></div><HeroNext label={t.what} target=\"about-eddfa\" /></section>";
   assert.ok(source("../src/components/pages.tsx").includes(hero));
   assert.deepEqual([messages.fr.heroTitle, messages.fr.heroText, messages.fr.contact, messages.fr.what], ["Sèche-serviettes en aluminium.", "Fabriqués à Sfax. À eau chaude ou électriques, trouvez le confort qui s’accorde à votre salle de bain.", "Contactez-nous", "FABRICANT TUNISIEN"]);
   assert.deepEqual([messages.ar.heroTitle, messages.ar.heroText, messages.ar.contact, messages.ar.what], ["مجففات مناشف من الألمنيوم.", "صُنعت في صفاقس. بالماء الساخن أو بالكهرباء، اختر الراحة المناسبة لحمامك.", "اتصل بنا", "صناعة تونسية"]);
@@ -134,7 +134,7 @@ test("EDDFA's mark is the radiator of its logo, and every range and model stays 
     assert.ok(source(`../src/components/${file}.tsx`).includes(use), `${file} carries the radiator`);
   }
   assert.ok((pages.match(/<Emblem /g) ?? []).length >= 8, "the symbol sits behind the sections of every page");
-  assert.ok(pages.includes('aside={<RangeNav tone="light" label={t.rangesNav} links={families.map(item => ({ href: `/${locale}/produits/${item.id}`'), "every range page switches between the five ranges");
+  assert.ok(pages.includes('<PageTrack label={t.rangesNav} links={families.map(item => ({ href: `/${locale}/produits/${item.id}`'), "every range page switches between the five ranges");
   const catalog = source("../src/components/catalog.tsx");
   assert.ok(catalog.includes('<RangeNav tone="light" label={`${t.modelsNav} ${family.name}`}'), "article pages switch between the models of their range");
   assert.match(source("../src/components/sizing-calculator.tsx"), /<WarmRadiators key=\{`\$\{best\.variant\.id\}-\$\{best\.units\}`\} units=\{best\.units\}/, "the calculator's radiator warms up again whenever the advice changes");
@@ -257,7 +257,7 @@ test("exploring: a quick view on every model chip, the same wall before and afte
   assert.ok(details.includes("eden.highlights[4][locale]") && details.includes("t.principles[0].text"), "the four points speak in EDDFA's own words");
   for (const locale of ["fr", "ar"] as const) for (const key of ["sameWallTitle", "detailsTitle"] as const) assert.equal(messages[locale][key].split("\n").length, 2, `${locale} ${key}`);
   const globals = source("../src/app/globals.css");
-  assert.ok(globals.includes(".hero-next::after") && globals.includes("@keyframes cue-light") && globals.includes(".site-shell[data-scrolled] .hero-next"), "the first section's cue invites the scroll and fades once it is done");
+  assert.ok(globals.includes(".hero-next::after") && globals.includes("@keyframes cue-light") && globals.includes("opacity: clamp(0, (1 - var(--cue)) * 1.8, 1)"), "the first section's cue invites the scroll and fades as the visitor scrolls");
 });
 
 // The user, 25 November 2026 (evening): no more sections, none removed; the pieces already there answer the visitor more.
@@ -379,4 +379,31 @@ test("photos: products, ranges and galleries show the new scenes only, each reco
     assert.ok(existsSync(new URL(`../public/eddfa/${name}.optimized.webp`, import.meta.url)), `${name} is in public/eddfa`);
   }
   assert.ok(pages.includes('<Photo src={asset("team-straight")}'), "the team photo is EDDFA's real one, straightened");
+});
+
+// The user, 25 November 2026 (night), from their phone: every page's first section like the Photos page's, every link
+// opening its page at the top, and the first section's arrow answering the visitor.
+test("every inner page opens like the Photos page: the title and the breadcrumbs over the film, nothing else", () => {
+  const pages = source("../src/components/pages.tsx");
+  assert.ok(!pages.includes("aside={") && !pages.includes("aside?:"), "no band carries a chip track any more");
+  assert.ok(pages.includes('<div className="container crumb-row"><nav className="breadcrumbs"'), "the band ends on the breadcrumbs");
+  assert.equal((pages.match(/<PageTrack /g) ?? []).length, 3, "the products, range and « Présentation » pages start their plate with their chip track");
+  assert.ok(pages.includes('<div className="page-heading"><p>{t.catalogText}</p><PageTrack'), "the products page offers its ranges under its first words");
+  assert.ok(source("../src/app/layers.css").includes(".page-track {"));
+});
+
+test("every link of the site opens its page at the top, and a link to a part of a page lands on that part", () => {
+  const shell = source("../src/components/site-shell.tsx");
+  assert.ok(!shell.includes("scroll={") && !shell.includes("usePageArrival"), "no header link keeps the previous page's scroll");
+  assert.ok(shell.includes("toTop.current = !url.hash;") && shell.includes('window.scrollTo({ top: 0, left: 0, behavior: "instant" });'), "the next page opens at its top, under the curtain");
+  assert.ok(shell.includes('window.addEventListener("popstate", back);'), "Back and Forward keep their place");
+});
+
+test("the first section's arrow answers the visitor: pointing, pressing, clicking and scrolling", () => {
+  const cue = source("../src/components/hero-next.tsx");
+  assert.ok(cue.includes('node.style.setProperty("--cue", progress.toFixed(3));') && cue.includes('node.toggleAttribute("data-gone", progress >= 0.98);'), "the scroll pours the light down the rail and the cue fades");
+  assert.ok(cue.includes('href={`#${target}`}') && cue.includes('<span className="cue-ring" aria-hidden="true"><ArrowDown size={16} /></span>'), "a click glides to the next section; the arrow sits in a ring");
+  const globals = source("../src/app/globals.css");
+  for (const rule of [".hero-next:hover .cue-ring", ".hero-next:active .cue-ring", ".hero-next:focus-visible .cue-ring", "calc(var(--cue) * 100%)", ".hero-next[data-gone]"]) assert.ok(globals.includes(rule), rule);
+  for (const sheet of ["layers", "signature"]) assert.ok(!source(`../src/app/${sheet}.css`).includes("cue-ring"), `${sheet}.css leaves the first section alone`);
 });

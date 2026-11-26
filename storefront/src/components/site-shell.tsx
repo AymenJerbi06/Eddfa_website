@@ -3,11 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowUp, ChevronDown, ChevronRight, ClipboardList, Globe2, Mail, MapPin, Menu, MessageCircle, Phone, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { company, families, messages, navigationHref, navPaths, whatsappHref, type CatalogProduct, type Locale } from "@/lib/content";
 import { CatalogContext } from "./catalog-context";
 import { switchLocalePath } from "@/lib/inquiry";
-import { usePageArrival } from "./page-arrival";
 import { Emblem } from "./emblem";
 import { BasketCount } from "./basket";
 import { EddfaLogo } from "./logo";
@@ -33,23 +32,18 @@ function Brand({ locale, dark = false, heatDelay }: { locale: Locale; dark?: boo
 type CurtainPhase = "intro" | "leaving" | "arriving" | "idle";
 const curtainCover = 640; // the least time the logo stays up when leaving a page, so it reads
 
-function Navigation({ locale, pathname, mobile = false, onNavigate, onReveal }: { locale: Locale; pathname: string; mobile?: boolean; onNavigate: () => void; onReveal: (destination: string) => void }) {
+function Navigation({ locale, pathname, mobile = false, onNavigate }: { locale: Locale; pathname: string; mobile?: boolean; onNavigate: () => void }) {
   const t = messages[locale];
   const [productsOpen, setProductsOpen] = useState(false);
   const toggle = useRef<HTMLButtonElement>(null);
   const dropdownId = `products-${locale}-${mobile ? "mobile" : "desktop"}`;
-  const navigate = (event: React.MouseEvent<HTMLAnchorElement>, path: typeof navPaths[number]) => {
-    onNavigate();
-    if (!path || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    onReveal(navigationHref(locale, path));
-  };
   return <>
     {t.nav.map((label, index) => <div key={navPaths[index]} className={`nav-item${index === 2 ? " has-dropdown" : ""}${index === quoteIndex ? " nav-quote" : ""}`}
       onMouseEnter={() => { if (index === 2 && !mobile) setProductsOpen(true); }}
       onMouseLeave={event => { if (!event.currentTarget.contains(document.activeElement)) setProductsOpen(false); }}
       onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setProductsOpen(false); }}
       onKeyDown={event => { if (index === 2 && event.key === "Escape" && productsOpen) { event.preventDefault(); event.stopPropagation(); setProductsOpen(false); toggle.current?.focus(); } }}>
-      <div className="nav-link-row"><Link href={navigationHref(locale, navPaths[index])} scroll={index === 0} onClick={event => navigate(event, navPaths[index])} aria-current={pathname === `/${locale}${navPaths[index]}` ? "page" : undefined}>{label}{index === quoteIndex && <BasketCount label={t.basketLabel} />}</Link>
+      <div className="nav-link-row"><Link href={navigationHref(locale, navPaths[index])} onClick={onNavigate} aria-current={pathname === `/${locale}${navPaths[index]}` ? "page" : undefined}>{label}{index === quoteIndex && <BasketCount label={t.basketLabel} />}</Link>
         {index === 2 && <button ref={toggle} type="button" className="nav-submenu-toggle" aria-label={locale === "ar" ? "قائمة المنتجات" : "Liste des produits"} aria-expanded={productsOpen} aria-controls={dropdownId} onClick={() => setProductsOpen(open => mobile ? !open : true)}><ChevronDown size={14} /></button>}
       </div>
       {index === 2 && <div id={dropdownId} className="nav-dropdown" hidden={!productsOpen}>{families.map(family => <Link key={family.id} href={`/${locale}/produits/${family.id}`} onClick={onNavigate}><bdi>{family.name}</bdi><small>{family.kind[locale]}</small></Link>)}<Link className="nav-dropdown-tool" href={`/${locale}/produits/eden#choisir`} onClick={onNavigate}>{t.sizingNav}<small>{t.sizingNavHint}</small></Link></div>}
@@ -67,7 +61,6 @@ export function SiteShell({ locale, products, adminAvailable, children }: { loca
   // Past the first screen, a compact header follows the visitor (on desktop; on phones the header simply stays on top).
   const [stuck, setStuck] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const pageArrival = usePageArrival(pathname, menuOpen);
   const mobileToggle = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     document.documentElement.lang = locale;
@@ -77,7 +70,7 @@ export function SiteShell({ locale, products, adminAvailable, children }: { loca
     window.addEventListener("scroll", update, { passive: true });
     return () => window.removeEventListener("scroll", update);
   }, [locale]);
-  const closeMenu = () => { setMenuOpen(false); pageArrival.cancel(); };
+  const closeMenu = () => setMenuOpen(false);
   const whatsapp = whatsappHref();
   // Doherty threshold: a thin line answers every internal link at once, while the page itself arrives.
   const [routing, setRouting] = useState(false);
@@ -88,6 +81,14 @@ export function SiteShell({ locale, products, adminAvailable, children }: { loca
   // The first page's logo warms up after the opening; later pages', right after the curtain lifts.
   const firstPath = useRef<string | null>(pathname);
   const show = (next: CurtainPhase) => { phase.current = next; setCurtain(next); };
+  // Every link of the site opens its page at the top (the user, 25 November 2026), out of sight under the curtain. A
+  // link to a part of a page (…#choisir) still lands on that part, and Back and Forward keep their place.
+  const toTop = useRef(false);
+  useLayoutEffect(() => {
+    if (!toTop.current) return;
+    toTop.current = false;
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [pathname]);
   // The opening on load: the curtain lifts by itself (CSS); this only sets it aside once it is gone.
   useEffect(() => {
     const timer = window.setTimeout(() => { if (phase.current === "intro") show("idle"); }, 2000);
@@ -112,6 +113,7 @@ export function SiteShell({ locale, products, adminAvailable, children }: { loca
       if (link.hasAttribute("aria-haspopup") || link.hasAttribute("data-no-curtain")) return;
       const url = new URL(link.href, window.location.href);
       if (url.origin !== window.location.origin || url.pathname === window.location.pathname || /\.[a-z0-9]+$/i.test(url.pathname) || url.pathname.startsWith("/admin")) return;
+      toTop.current = !url.hash;
       setRouting(true);
       window.clearTimeout(timer);
       // If the next page takes too long, the curtain lifts anyway and the line keeps waiting.
@@ -121,8 +123,10 @@ export function SiteShell({ locale, products, adminAvailable, children }: { loca
       leftAt.current = performance.now();
       show("leaving");
     };
+    const back = () => { toTop.current = false; };
     document.addEventListener("click", start, true);
-    return () => { document.removeEventListener("click", start, true); window.clearTimeout(timer); };
+    window.addEventListener("popstate", back);
+    return () => { document.removeEventListener("click", start, true); window.removeEventListener("popstate", back); window.clearTimeout(timer); };
   }, []);
   return <CatalogContext.Provider value={products}>
     <div lang={locale} dir={locale === "ar" ? "rtl" : "ltr"} className="site-shell" data-page={quotePage ? "devis" : undefined} data-scrolled={scrolled ? "" : undefined}>
@@ -135,11 +139,11 @@ export function SiteShell({ locale, products, adminAvailable, children }: { loca
       </div>
       <a className="skip-link" href="#main-content">{t.skip}</a>
       <header className={`site-header${!home ? " solid" : ""}${stuck ? " stuck" : ""}${menuOpen ? " menu-expanded" : ""}`} onKeyDown={event => { if (event.key === "Escape" && menuOpen) { closeMenu(); mobileToggle.current?.focus(); } }}>
-        <div className="header-inner"><Brand key={pathname} locale={locale} heatDelay={pathname === firstPath.current ? "1.7s" : "0.75s"} /><nav className="desktop-nav" aria-label={locale === "ar" ? "القائمة الرئيسية" : "Navigation principale"}><Navigation key={pathname} locale={locale} pathname={pathname} onNavigate={closeMenu} onReveal={pageArrival.reveal} /></nav>
+        <div className="header-inner"><Brand key={pathname} locale={locale} heatDelay={pathname === firstPath.current ? "1.7s" : "0.75s"} /><nav className="desktop-nav" aria-label={locale === "ar" ? "القائمة الرئيسية" : "Navigation principale"}><Navigation key={pathname} locale={locale} pathname={pathname} onNavigate={closeMenu} /></nav>
           {!quotePage && <Link className="header-quote" href={`/${locale}/devis`} onClick={closeMenu}>{t.nav[5]}<BasketCount label={t.basketLabel} /></Link>}
           <button ref={mobileToggle} type="button" className="mobile-menu-button icon-button" aria-label={menuOpen ? t.close : t.menu} aria-expanded={menuOpen} aria-controls="mobile-navigation" onClick={() => setMenuOpen(open => !open)}>{menuOpen ? <X size={24} /> : <Menu size={24} />}</button>
         </div>
-        <nav id="mobile-navigation" className="mobile-nav" hidden={!menuOpen} aria-label={locale === "ar" ? "القائمة الرئيسية للجوال" : "Navigation mobile"}><Navigation key={pathname} locale={locale} pathname={pathname} mobile onNavigate={closeMenu} onReveal={pageArrival.reveal} /><div className="mobile-contact"><a href={`tel:${company.telephone}`}><Phone size={17} />{t.railCall}</a><a href={`mailto:${company.email}`}><Mail size={18} />{t.railMail}</a>{whatsapp && <a href={whatsapp} target="_blank" rel="noopener noreferrer"><MessageCircle size={18} />{t.whatsapp}</a>}</div></nav>
+        <nav id="mobile-navigation" className="mobile-nav" hidden={!menuOpen} aria-label={locale === "ar" ? "القائمة الرئيسية للجوال" : "Navigation mobile"}><Navigation key={pathname} locale={locale} pathname={pathname} mobile onNavigate={closeMenu} /><div className="mobile-contact"><a href={`tel:${company.telephone}`}><Phone size={17} />{t.railCall}</a><a href={`mailto:${company.email}`}><Mail size={18} />{t.railMail}</a>{whatsapp && <a href={whatsapp} target="_blank" rel="noopener noreferrer"><MessageCircle size={18} />{t.whatsapp}</a>}</div></nav>
       </header>
       <main id="main-content">{children}</main>
       <footer className="site-footer"><Emblem side="end" edge="bottom" />

@@ -1,5 +1,9 @@
 "use client";
 
+// No longer used, since 25 November 2026: every link of the site now opens its page at the top (the user's request; see
+// site-shell.tsx). This scrolled the new page past an `.about-banner` that the redesign no longer has, so it had stopped
+// working, and the header links that waited for it kept the previous page's scroll. Safe to delete.
+
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 
 export const pageArrivalDuration = 720;

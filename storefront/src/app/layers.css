@@ -161,10 +161,10 @@ main > .plate:first-child { margin-top: calc(80px + var(--inset)); }
 .page-banner .breadcrumbs { color: var(--on-dark-soft); }
 .page-banner .breadcrumbs a { color: var(--brass-light); }
 .page-banner .breadcrumbs [aria-current="page"] { color: var(--on-dark); }
-.page-banner .range-nav ul { border-color: var(--line-dark); background: rgb(35 37 38 / 62%); }
-.page-banner .range-nav a { color: var(--on-dark); }
-.page-banner .range-nav a:hover { background: rgb(242 241 239 / 12%); }
-.page-banner .range-nav a[aria-current="page"] { background: var(--on-dark); color: var(--graphite); }
+/* A page's chip track starts the plate under the band (the user, 25 November 2026: every page's first section like
+   the Photos page's, the title and the breadcrumbs over the film, nothing else). */
+.page-track { margin-bottom: clamp(30px, 2vw + 18px, 46px); }
+.page-heading .page-track { margin: 26px 0 0; }
 .breadcrumbs { flex-wrap: wrap; row-gap: 2px; min-height: 44px; padding-block: 0; color: var(--muted); font-size: 15px; }
 .breadcrumbs a { position: relative; color: var(--brass-deep); }
 .breadcrumbs a::after { content: ""; position: absolute; inset: 50% -6px auto; height: 44px; translate: 0 -50%; }
@@ -356,6 +356,10 @@ main > .plate:first-child { margin-top: calc(80px + var(--inset)); }
   .crumb-row { gap: 4px; padding-block: 10px 6px; }
   .crumb-row .range-nav { width: 100%; }
   .range-nav a { min-height: 38px; padding: 7px 13px; font-size: 13px; }
+  /* On a phone the chips of a page's track wrap onto a second line rather than hide past the edge. */
+  .page-track .range-nav ul { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; border: 0; background: none; overflow: visible; -webkit-mask-image: none; mask-image: none; }
+  .page-track .range-nav a { border: 1px solid var(--line-soft); background: var(--marble-2); }
+  .page-track .range-nav a[aria-current="page"] { border-color: var(--graphite); background: var(--graphite); }
   .catalog-grid { gap: 30px 14px; }
   .catalog-item-caption :is(h2, h3) { font-size: 17px; }
   .catalog-photo { aspect-ratio: 0.8; }

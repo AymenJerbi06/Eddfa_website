@@ -1,6 +1,6 @@
 import { Fragment, type ReactNode } from "react";
 import Link from "next/link";
-import { ArrowDown, Asterisk, CheckCircle2, ChevronDown, ChevronRight, FileText, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import { Asterisk, CheckCircle2, ChevronDown, ChevronRight, FileText, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { asset, company, families, messages, pageContentId, whatsappHref, type CatalogProduct, type Locale, type ProductFamily } from "@/lib/content";
 import type { QuoteQuery } from "@/lib/quote";
 import { Photo } from "./media";
@@ -8,7 +8,7 @@ import { PillLink, QuoteLink } from "./site-shell";
 import { ProjectCarousel, GalleryGrid } from "./galleries";
 import { ArticleGrid, CatalogCard } from "./catalog";
 import { InquiryForm } from "./inquiry-form";
-import { RangeNav } from "./range-nav";
+import { RangeNav, type RangeLink } from "./range-nav";
 import { SpecTable } from "./spec-table";
 import { SizingCalculator } from "./sizing-calculator";
 import { QuoteBuilder } from "./quote-builder";
@@ -22,22 +22,29 @@ import { Lines } from "./lines";
 import { RadiatorMark } from "./radiator-mark";
 import { Emblem } from "./emblem";
 import { FilmLoop, ScrubFilm, type LoopName } from "./film";
+import { HeroNext } from "./hero-next";
 
 // A section's title (short sentences, the second one lighter) and, when it has one, a line under it.
 function SectionIntro({ title, text }: { title: string; text?: string }) {
   return <div className="section-intro"><h2 className="title"><Lines text={title} /></h2>{text && <p>{text}</p>}</div>;
 }
 
-// The top of the inner pages: a charcoal band with the page's title over a Higgsfield film (the range's own room for
-// EDEN and ECLAT, EDDFA's aluminium tubes everywhere else), then, still on the band, the breadcrumbs and, when a page
-// has one, its own chip track. The page itself starts on the marble plate under it.
+// The top of the inner pages, the same on every one (the user, 25 November 2026: like the Photos page): a charcoal band
+// with the page's title over a Higgsfield film (the range's own room for EDEN and ECLAT, EDDFA's aluminium tubes
+// everywhere else) and the breadcrumbs under it, nothing else. The page itself starts on the marble plate under it,
+// with its own chip track first when it has one (PageTrack).
 type Crumb = { href: string; label: string };
-function PageBanner({ locale, title, label, film = "aluminium", trail = [], aside }: { locale: Locale; title: string; label: string; film?: LoopName; trail?: Crumb[]; aside?: ReactNode }) {
+function PageBanner({ locale, title, label, film = "aluminium", trail = [] }: { locale: Locale; title: string; label: string; film?: LoopName; trail?: Crumb[] }) {
   return <section className={`band page-banner${film === "aluminium" ? "" : " range-banner"}`}>
     <FilmLoop name={film} wide className="banner-film" /><div className="banner-shade" aria-hidden="true" />
     <div className="container banner-copy"><h1 className="title"><Lines text={title} /></h1></div>
-    <div className={`container crumb-row${aside ? " has-aside" : ""}`}><nav className="breadcrumbs" aria-label={locale === "ar" ? "مسار الصفحة" : "Fil d’Ariane"}><Link href={`/${locale}`}>{messages[locale].nav[0]}</Link>{trail.map(crumb => <Fragment key={crumb.href}><ChevronRight size={14} className="directional-icon" /><Link href={crumb.href}>{crumb.label}</Link></Fragment>)}<ChevronRight size={14} className="directional-icon" /><span aria-current="page"><bdi>{label}</bdi></span></nav>{aside}</div>
+    <div className="container crumb-row"><nav className="breadcrumbs" aria-label={locale === "ar" ? "مسار الصفحة" : "Fil d’Ariane"}><Link href={`/${locale}`}>{messages[locale].nav[0]}</Link>{trail.map(crumb => <Fragment key={crumb.href}><ChevronRight size={14} className="directional-icon" /><Link href={crumb.href}>{crumb.label}</Link></Fragment>)}<ChevronRight size={14} className="directional-icon" /><span aria-current="page"><bdi>{label}</bdi></span></nav></div>
   </section>;
+}
+
+// A page's chip track (the five ranges, or the chapters of « Présentation »), first on the plate under the band.
+function PageTrack({ label, links }: { label: string; links: RangeLink[] }) {
+  return <div className="page-track"><RangeNav tone="light" label={label} links={links} /></div>;
 }
 
 const teamAlt = (locale: Locale) => locale === "fr" ? "L’équipe EDDFA devant son véhicule à Sfax" : "فريق EDDFA أمام سيارته في صفاقس";
@@ -92,7 +99,7 @@ export function CallToAction({ locale }: { locale: Locale }) {
 export function HomePage({ locale, products }: { locale: Locale; products: CatalogProduct[] }) {
   const t = messages[locale];
   return <>
-    <section className="hero"><Photo src={asset("hero-eden")} alt="" priority sizes="100vw" className="hero-poster" /><div className="hero-shade" /><div className="container hero-content"><h1><span className="hero-brand">EDDFA</span>{t.heroTitle}</h1><p>{t.heroText}</p><Link href={`/${locale}/contact`} className="pill-button light">{t.contact}</Link></div><a className="hero-next" href="#about-eddfa"><span>{t.what}</span><ArrowDown size={16} /></a></section>
+    <section className="hero"><Photo src={asset("hero-eden")} alt="" priority sizes="100vw" className="hero-poster" /><div className="hero-shade" /><div className="container hero-content"><h1><span className="hero-brand">EDDFA</span>{t.heroTitle}</h1><p>{t.heroText}</p><Link href={`/${locale}/contact`} className="pill-button light">{t.contact}</Link></div><HeroNext label={t.what} target="about-eddfa" /></section>
     <AboutSection locale={locale} />
     <ScrollStory locale={locale} />
     <HomeGuide locale={locale} />
@@ -122,9 +129,9 @@ export function CatalogPage({ locale, products }: { locale: Locale; products: Ca
   const bundles = products.filter(product => product.category === "bundle");
   const withArticles = families.filter(family => products.some(product => product.category === family.id));
   const waiting = families.filter(family => !withArticles.includes(family));
-  return <><PageBanner locale={locale} title={t.catalogTitle} label={t.nav[2]} aside={<RangeNav tone="light" label={t.rangesNav} links={families.map(family => ({ href: withArticles.includes(family) ? `#${family.id}` : `/${locale}/produits/${family.id}`, label: family.name, current: false }))} />} />
+  return <><PageBanner locale={locale} title={t.catalogTitle} label={t.nav[2]} />
     <section className="section plate page-section has-banner catalog-section"><Emblem side="end" /><div id={pageContentId} className="container page-content-target">
-      <div className="page-heading"><p>{t.catalogText}</p></div>
+      <div className="page-heading"><p>{t.catalogText}</p><PageTrack label={t.rangesNav} links={families.map(family => ({ href: withArticles.includes(family) ? `#${family.id}` : `/${locale}/produits/${family.id}`, label: family.name, current: false }))} /></div>
       {withArticles.map(family => <RangeGroup key={family.id} locale={locale} id={family.id} name={family.name} kind={family.kind[locale]} summary={family.summary[locale]} items={products.filter(product => product.category === family.id)} rangeHref={`/${locale}/produits/${family.id}`} />)}
       {bundles.length > 0 && <RangeGroup locale={locale} id="packs" name={t.bundle} kind={t.composition} items={bundles} />}
       {waiting.length > 0 && <OtherRanges locale={locale} title={t.othersTitle} ranges={waiting} />}
@@ -139,14 +146,14 @@ export function FamilyPage({ locale, family, products }: { locale: Locale; famil
   const rows = items.flatMap(product => product.variants.filter(variant => variant.dimensions[0] > 0).map(variant => ({ product, variant })));
   const quoteQuery = items.length ? "" : `?gamme=${family.id}`;
   return <>
-    <PageBanner locale={locale} title={`${family.name}\n${family.kind[locale]}`} label={family.name} film={family.id === "eden" || family.id === "eclat" ? family.id : "aluminium"} trail={[{ href: `/${locale}/produits`, label: t.nav[2] }]}
-      aside={<RangeNav tone="light" label={t.rangesNav} links={families.map(item => ({ href: `/${locale}/produits/${item.id}`, label: item.name, current: item.id === family.id }))} />} />
-    <section className="section plate page-section has-banner"><Emblem side="end" /><div id={pageContentId} className="container page-content-target family-intro">
-      <div><h2 className="title">{family.summary[locale]}</h2>{family.intro.map(paragraph => <p key={paragraph.fr}>{paragraph[locale]}</p>)}</div>
+    <PageBanner locale={locale} title={`${family.name}\n${family.kind[locale]}`} label={family.name} film={family.id === "eden" || family.id === "eclat" ? family.id : "aluminium"} trail={[{ href: `/${locale}/produits`, label: t.nav[2] }]} />
+    <section className="section plate page-section has-banner"><Emblem side="end" /><div id={pageContentId} className="container page-content-target">
+      <PageTrack label={t.rangesNav} links={families.map(item => ({ href: `/${locale}/produits/${item.id}`, label: item.name, current: item.id === family.id }))} />
+      <div className="family-intro"><div><h2 className="title">{family.summary[locale]}</h2>{family.intro.map(paragraph => <p key={paragraph.fr}>{paragraph[locale]}</p>)}</div>
       <div className="family-aside">
         {family.highlights.length > 0 && <ul className="highlight-list">{family.highlights.map(item => <li key={item.fr}><CheckCircle2 size={17} />{item[locale]}</li>)}</ul>}
         <div className="family-actions"><QuoteLink locale={locale} query={quoteQuery}>{t.quote}<ChevronRight size={19} className="directional-icon" /></QuoteLink>{family.sizing && items.length > 0 && <a className="pill-button" href="#choisir">{t.chooseModel}<ChevronDown size={18} /></a>}</div>
-      </div>
+      </div></div>
     </div></section>
     {items.length ? <>
       <section className="section plate family-articles"><div className="container"><SectionIntro title={`${t.articlesOf} ${family.name}`} /><ArticleGrid locale={locale} items={items} scale={Boolean(family.sizing)} />
@@ -164,13 +171,13 @@ export function InspirationPage({ locale }: { locale: Locale }) {
 }
 
 // "Présentation de la société", in the client's five points: activity, history, products, general information,
-// premises and location. A chip track at the top leads to each one.
+// premises and location. A chip track at the top of the first plate leads to each one.
 const chapterIds = ["activite", "historique", "produits", "informations", "locaux"] as const;
 
 function PresentationSection({ locale }: { locale: Locale }) {
   const t = messages[locale];
   const [lead, ...rest] = t.presentation;
-  return <section id="activite" className="section plate about-section presentation-section"><Emblem side="end" /><div id={pageContentId} className="container page-content-target"><div className="about-grid"><TeamFigure locale={locale} priority /><div className="about-copy">
+  return <section id="activite" className="section plate about-section presentation-section"><Emblem side="end" /><div id={pageContentId} className="container page-content-target"><PageTrack label={t.chaptersLabel} links={chapterIds.map((id, index) => ({ href: `#${id}`, label: t.chapters[index], current: false }))} /><div className="about-grid"><TeamFigure locale={locale} priority /><div className="about-copy">
     <h2 className="title">{t.presentationTitle}</h2><p>{lead}</p>
     <details className="read-more"><summary><span className="more">{t.readMore}</span><span className="less">{t.readLess}</span><ChevronDown size={16} /></summary>{rest.map(paragraph => <p key={paragraph.slice(0, 32)}>{paragraph}</p>)}</details>
     <p className="slogan">{t.slogan}</p>
@@ -205,7 +212,7 @@ function InfoSection({ locale }: { locale: Locale }) {
 
 export function AboutPage({ locale }: { locale: Locale }) {
   const t = messages[locale];
-  return <><PageBanner locale={locale} title={t.aboutPageTitle} label={t.nav[1]} aside={<RangeNav tone="light" label={t.chaptersLabel} links={chapterIds.map((id, index) => ({ href: `#${id}`, label: t.chapters[index], current: false }))} />} />
+  return <><PageBanner locale={locale} title={t.aboutPageTitle} label={t.nav[1]} />
     <PresentationSection locale={locale} />
     <HistoryTimeline locale={locale} />
     <ProductsChapter locale={locale} />
